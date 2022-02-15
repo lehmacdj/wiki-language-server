@@ -1,0 +1,102 @@
+name:                wiki-language-server
+version:             0.1.0.0
+github:              "lehmacdj/wiki-language-server"
+license:             BSD3
+author:              "Devin Lehmacher"
+maintainer:          "lehmacdj@gmail.com"
+copyright:           "2022 Devin Lehmacher"
+synopsis:            An LSP implementation for wiki style markdown notes.
+category:            LSP
+description:
+  An implementation of an LSP for wiki style markdown notes. The goal is that
+  using this with a fairly default LSP setup for your text editor gives you
+  functionality like following wiki style / other links + autocompletion for
+  link names through the LSP completion function. For further info please see
+  <https://github.com/lehmacdj/wiki-language-server#readme>.
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+
+dependencies:
+- base >= 4.7 && < 5
+- bytestring
+- classy-prelude
+- containers
+- data-default
+- exceptions
+- generic-lens
+- lens
+- lsp
+- lsp-types
+- megaparsec
+- monad-control
+- mtl
+- parser-combinators
+- prettyprinter
+- prettyprinter-ansi-terminal
+- text
+- validation-selective
+# test dependencies, trying to keep these separate even though they are required
+# by the main lib because our tests are in tree.
+- tasty
+- tasty-hunit
+- tasty-discover
+- tasty-golden
+- tasty-quickcheck
+- quickcheck-instances
+
+default-extensions:
+- BlockArguments
+- DataKinds
+- DeriveFunctor
+- DeriveGeneric
+- DeriveTraversable
+- DeriveFoldable
+- DerivingStrategies
+- DuplicateRecordFields
+- FlexibleContexts
+- GADTs
+- GeneralizedNewtypeDeriving
+- ImportQualifiedPost
+- LambdaCase
+- NoImplicitPrelude
+- OverloadedLabels
+- OverloadedStrings
+- PolyKinds
+- QuantifiedConstraints
+- RankNTypes
+- ScopedTypeVariables
+- StandaloneDeriving
+- TupleSections
+- TypeApplications
+- TypeFamilies
+- TypeOperators
+- ViewPatterns
+
+library:
+  source-dirs: src
+
+executables:
+  wiki-language-server:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    # TODO: use low latency GC because good idea for LSP
+    dependencies:
+    - wiki-language-server
+
+tests:
+  wiki-language-server-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - wiki-language-server

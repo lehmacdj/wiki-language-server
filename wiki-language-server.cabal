@@ -1,0 +1,217 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.5.
+--
+-- see: https://github.com/sol/hpack
+
+name:           wiki-language-server
+version:        0.1.0.0
+synopsis:       An LSP implementation for wiki style markdown notes.
+description:    An implementation of an LSP for wiki style markdown notes. The goal is that using this with a fairly default LSP setup for your text editor gives you functionality like following wiki style / other links + autocompletion for link names through the LSP completion function. For further info please see <https://github.com/lehmacdj/wiki-language-server#readme>.
+category:       LSP
+homepage:       https://github.com/lehmacdj/wiki-language-server#readme
+bug-reports:    https://github.com/lehmacdj/wiki-language-server/issues
+author:         Devin Lehmacher
+maintainer:     lehmacdj@gmail.com
+copyright:      2022 Devin Lehmacher
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/lehmacdj/wiki-language-server
+
+library
+  exposed-modules:
+      Executable.LSP
+      MyPrelude
+      Spec
+      Wiki.LSP.Config
+      Wiki.LSP.Handlers
+      Wiki.LSP.ServerDefinition
+  other-modules:
+      Paths_wiki_language_server
+  hs-source-dirs:
+      src
+  default-extensions:
+      BlockArguments
+      DataKinds
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DeriveFoldable
+      DerivingStrategies
+      DuplicateRecordFields
+      FlexibleContexts
+      GADTs
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      LambdaCase
+      NoImplicitPrelude
+      OverloadedLabels
+      OverloadedStrings
+      PolyKinds
+      QuantifiedConstraints
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , classy-prelude
+    , containers
+    , data-default
+    , exceptions
+    , generic-lens
+    , lens
+    , lsp
+    , lsp-types
+    , megaparsec
+    , monad-control
+    , mtl
+    , parser-combinators
+    , prettyprinter
+    , prettyprinter-ansi-terminal
+    , quickcheck-instances
+    , tasty
+    , tasty-discover
+    , tasty-golden
+    , tasty-hunit
+    , tasty-quickcheck
+    , text
+    , validation-selective
+  default-language: Haskell2010
+
+executable wiki-language-server
+  main-is: Main.hs
+  other-modules:
+      Paths_wiki_language_server
+  hs-source-dirs:
+      app
+  default-extensions:
+      BlockArguments
+      DataKinds
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DeriveFoldable
+      DerivingStrategies
+      DuplicateRecordFields
+      FlexibleContexts
+      GADTs
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      LambdaCase
+      NoImplicitPrelude
+      OverloadedLabels
+      OverloadedStrings
+      PolyKinds
+      QuantifiedConstraints
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , classy-prelude
+    , containers
+    , data-default
+    , exceptions
+    , generic-lens
+    , lens
+    , lsp
+    , lsp-types
+    , megaparsec
+    , monad-control
+    , mtl
+    , parser-combinators
+    , prettyprinter
+    , prettyprinter-ansi-terminal
+    , quickcheck-instances
+    , tasty
+    , tasty-discover
+    , tasty-golden
+    , tasty-hunit
+    , tasty-quickcheck
+    , text
+    , validation-selective
+    , wiki-language-server
+  default-language: Haskell2010
+
+test-suite wiki-language-server-test
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_wiki_language_server
+  hs-source-dirs:
+      test
+  default-extensions:
+      BlockArguments
+      DataKinds
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DeriveFoldable
+      DerivingStrategies
+      DuplicateRecordFields
+      FlexibleContexts
+      GADTs
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      LambdaCase
+      NoImplicitPrelude
+      OverloadedLabels
+      OverloadedStrings
+      PolyKinds
+      QuantifiedConstraints
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , classy-prelude
+    , containers
+    , data-default
+    , exceptions
+    , generic-lens
+    , lens
+    , lsp
+    , lsp-types
+    , megaparsec
+    , monad-control
+    , mtl
+    , parser-combinators
+    , prettyprinter
+    , prettyprinter-ansi-terminal
+    , quickcheck-instances
+    , tasty
+    , tasty-discover
+    , tasty-golden
+    , tasty-hunit
+    , tasty-quickcheck
+    , text
+    , validation-selective
+    , wiki-language-server
+  default-language: Haskell2010
