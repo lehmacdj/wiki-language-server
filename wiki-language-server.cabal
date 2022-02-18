@@ -33,6 +33,7 @@ library
       Wiki.LSP.Config
       Wiki.LSP.Handlers
       Wiki.LSP.ServerDefinition
+      Wiki.Page.Parser
   other-modules:
       Paths_wiki_language_server
   hs-source-dirs:
@@ -68,6 +69,9 @@ library
       base >=4.7 && <5
     , bytestring
     , classy-prelude
+    , commonmark
+    , commonmark-extensions
+    , commonmark-pandoc
     , containers
     , data-default
     , exceptions
@@ -78,6 +82,7 @@ library
     , megaparsec
     , monad-control
     , mtl
+    , pandoc-types
     , parser-combinators
     , prettyprinter
     , prettyprinter-ansi-terminal
@@ -129,6 +134,9 @@ executable wiki-language-server
       base >=4.7 && <5
     , bytestring
     , classy-prelude
+    , commonmark
+    , commonmark-extensions
+    , commonmark-pandoc
     , containers
     , data-default
     , exceptions
@@ -139,6 +147,7 @@ executable wiki-language-server
     , megaparsec
     , monad-control
     , mtl
+    , pandoc-types
     , parser-combinators
     , prettyprinter
     , prettyprinter-ansi-terminal
@@ -192,6 +201,9 @@ test-suite wiki-language-server-test
       base >=4.7 && <5
     , bytestring
     , classy-prelude
+    , commonmark
+    , commonmark-extensions
+    , commonmark-pandoc
     , containers
     , data-default
     , exceptions
@@ -202,6 +214,7 @@ test-suite wiki-language-server-test
     , megaparsec
     , monad-control
     , mtl
+    , pandoc-types
     , parser-combinators
     , prettyprinter
     , prettyprinter-ansi-terminal

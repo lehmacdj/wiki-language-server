@@ -4,6 +4,10 @@ Language server protocol for markdown notes with wiki style links.
 Currently supports:
 - Nothing so far
 
+MVP features (this will be a moving target, and mostly is a smaller list to keep
+me focused on what I'm working on right now):
+- parse documents and report diagnostic if parsing failed
+
 Aspires to support at least:
 - goto definition that implements jumping between notes via links
 - autocomplete for note titles when starting a new link

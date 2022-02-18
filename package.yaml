@@ -23,6 +23,9 @@ dependencies:
 - base >= 4.7 && < 5
 - bytestring
 - classy-prelude
+- commonmark
+- commonmark-extensions
+- commonmark-pandoc
 - containers
 - data-default
 - exceptions
@@ -33,6 +36,7 @@ dependencies:
 - megaparsec
 - monad-control
 - mtl
+- pandoc-types
 - parser-combinators
 - prettyprinter
 - prettyprinter-ansi-terminal
