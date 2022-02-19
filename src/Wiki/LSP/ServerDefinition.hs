@@ -9,14 +9,14 @@ import Wiki.LSP.Handlers
 
 type HandlerM = LspT Config IO
 
-runHandler :: LanguageContextEnv Config -> HandlerM a -> IO a
-runHandler = runLspT
+runHandlerM :: LanguageContextEnv Config -> HandlerM a -> IO a
+runHandlerM = runLspT
 
-handlerInterpreter :: LanguageContextEnv Config -> HandlerM <~> IO
-handlerInterpreter env = Iso (runHandler env) liftIO
+interpretHandlerM :: LanguageContextEnv Config -> HandlerM <~> IO
+interpretHandlerM env = Iso (runHandlerM env) liftIO
 
-options :: Options
-options =
+serverOptions :: Options
+serverOptions =
   def
     { textDocumentSync =
         Just
@@ -35,10 +35,10 @@ options =
 serverDefinition :: ServerDefinition Config
 serverDefinition =
   ServerDefinition
-    { defaultConfig = Config,
-      onConfigurationChange = \_ _ -> Right Config,
-      doInitialize = \env _ -> pure (Right env),
+    { defaultConfig = def,
+      onConfigurationChange = onConfigChange,
+      doInitialize = \env _ -> traceM "initialize" >> pure (Right env),
       staticHandlers = handlers,
-      interpretHandler = handlerInterpreter,
-      options = def
+      interpretHandler = interpretHandlerM,
+      options = serverOptions
     }

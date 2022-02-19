@@ -18,8 +18,12 @@ extra-source-files:
 - README.md
 - ChangeLog.md
 
+ghc-options:
+- -Wall
+- -Wno-name-shadowing
 
 dependencies:
+- aeson
 - base >= 4.7 && < 5
 - bytestring
 - classy-prelude
@@ -37,9 +41,13 @@ dependencies:
 - monad-control
 - mtl
 - pandoc-types
+- parsec # unfortunately this is used by commonmark at the moment, might be
+         # worth trying to upgrade it to use Megaparsec, may provide speed gains
+         # too
 - parser-combinators
 - prettyprinter
 - prettyprinter-ansi-terminal
+- template-haskell
 - text
 - validation-selective
 # test dependencies, trying to keep these separate even though they are required
@@ -53,7 +61,9 @@ dependencies:
 
 default-extensions:
 - BlockArguments
+- ConstraintKinds
 - DataKinds
+- DeriveAnyClass
 - DeriveFunctor
 - DeriveGeneric
 - DeriveTraversable
@@ -65,6 +75,7 @@ default-extensions:
 - GeneralizedNewtypeDeriving
 - ImportQualifiedPost
 - LambdaCase
+- NamedFieldPuns
 - NoImplicitPrelude
 - OverloadedLabels
 - OverloadedStrings

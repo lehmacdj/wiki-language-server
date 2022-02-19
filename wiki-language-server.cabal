@@ -30,9 +30,13 @@ library
       Executable.LSP
       MyPrelude
       Spec
+      Wiki.Diagnostics
       Wiki.LSP.Config
       Wiki.LSP.Handlers
+      Wiki.LSP.Handlers.TH
       Wiki.LSP.ServerDefinition
+      Wiki.LSP.Util
+      Wiki.Page
       Wiki.Page.Parser
   other-modules:
       Paths_wiki_language_server
@@ -40,7 +44,9 @@ library
       src
   default-extensions:
       BlockArguments
+      ConstraintKinds
       DataKinds
+      DeriveAnyClass
       DeriveFunctor
       DeriveGeneric
       DeriveTraversable
@@ -52,6 +58,7 @@ library
       GeneralizedNewtypeDeriving
       ImportQualifiedPost
       LambdaCase
+      NamedFieldPuns
       NoImplicitPrelude
       OverloadedLabels
       OverloadedStrings
@@ -65,8 +72,10 @@ library
       TypeFamilies
       TypeOperators
       ViewPatterns
+  ghc-options: -Wall -Wno-name-shadowing
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , bytestring
     , classy-prelude
     , commonmark
@@ -83,6 +92,7 @@ library
     , monad-control
     , mtl
     , pandoc-types
+    , parsec
     , parser-combinators
     , prettyprinter
     , prettyprinter-ansi-terminal
@@ -92,6 +102,7 @@ library
     , tasty-golden
     , tasty-hunit
     , tasty-quickcheck
+    , template-haskell
     , text
     , validation-selective
   default-language: Haskell2010
@@ -104,7 +115,9 @@ executable wiki-language-server
       app
   default-extensions:
       BlockArguments
+      ConstraintKinds
       DataKinds
+      DeriveAnyClass
       DeriveFunctor
       DeriveGeneric
       DeriveTraversable
@@ -116,6 +129,7 @@ executable wiki-language-server
       GeneralizedNewtypeDeriving
       ImportQualifiedPost
       LambdaCase
+      NamedFieldPuns
       NoImplicitPrelude
       OverloadedLabels
       OverloadedStrings
@@ -129,9 +143,10 @@ executable wiki-language-server
       TypeFamilies
       TypeOperators
       ViewPatterns
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , bytestring
     , classy-prelude
     , commonmark
@@ -148,6 +163,7 @@ executable wiki-language-server
     , monad-control
     , mtl
     , pandoc-types
+    , parsec
     , parser-combinators
     , prettyprinter
     , prettyprinter-ansi-terminal
@@ -157,6 +173,7 @@ executable wiki-language-server
     , tasty-golden
     , tasty-hunit
     , tasty-quickcheck
+    , template-haskell
     , text
     , validation-selective
     , wiki-language-server
@@ -171,7 +188,9 @@ test-suite wiki-language-server-test
       test
   default-extensions:
       BlockArguments
+      ConstraintKinds
       DataKinds
+      DeriveAnyClass
       DeriveFunctor
       DeriveGeneric
       DeriveTraversable
@@ -183,6 +202,7 @@ test-suite wiki-language-server-test
       GeneralizedNewtypeDeriving
       ImportQualifiedPost
       LambdaCase
+      NamedFieldPuns
       NoImplicitPrelude
       OverloadedLabels
       OverloadedStrings
@@ -196,9 +216,10 @@ test-suite wiki-language-server-test
       TypeFamilies
       TypeOperators
       ViewPatterns
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , bytestring
     , classy-prelude
     , commonmark
@@ -215,6 +236,7 @@ test-suite wiki-language-server-test
     , monad-control
     , mtl
     , pandoc-types
+    , parsec
     , parser-combinators
     , prettyprinter
     , prettyprinter-ansi-terminal
@@ -224,6 +246,7 @@ test-suite wiki-language-server-test
     , tasty-golden
     , tasty-hunit
     , tasty-quickcheck
+    , template-haskell
     , text
     , validation-selective
     , wiki-language-server
