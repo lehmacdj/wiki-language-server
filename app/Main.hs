@@ -1,7 +1,7 @@
 module Main where
 
-import MyPrelude
 import Executable.LSP qualified as LSP
+import MyPrelude
 
 main :: IO ()
 main = LSP.main

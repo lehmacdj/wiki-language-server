@@ -2,12 +2,11 @@
 Language server protocol for markdown notes with wiki style links.
 
 Currently supports:
-- Nothing
+- parses documents and reports diagnostic if parsing failed. IIRC markdown never
+  fails to parse so this is pretty much a no-op though.
 
 MVP features (this will be a moving target, and mostly is a smaller list to keep
 me focused on what I'm working on right now):
-- parses documents and reports diagnostic if parsing failed. IIRC markdown never
-  fails to parse so this is pretty much a no-op though.
 
 Technical concerns, that probably will become relevant when implementing below:
 - Need some global state synchronization like Reactor pattern from Reactor.hs

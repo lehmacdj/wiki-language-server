@@ -1,6 +1,6 @@
 module Main where
 
-import qualified Spec
+import Spec qualified
 import Prelude
 
 main :: IO ()

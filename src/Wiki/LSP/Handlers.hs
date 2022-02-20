@@ -7,13 +7,13 @@ module Wiki.LSP.Handlers (handlers) where
 
 import Language.LSP.Server
 import Language.LSP.Types
-import MyPrelude
-import Wiki.LSP.Config
-import Wiki.Page qualified as Page
 import Language.LSP.Types.Lens as J
-import Wiki.LSP.Util
-import Wiki.Diagnostics
 import Language.LSP.VFS
+import MyPrelude
+import Wiki.Diagnostics
+import Wiki.LSP.Config
+import Wiki.LSP.Util
+import Wiki.Page qualified as Page
 
 type HandlerMonad m = (MonadLsp Config m)
 
@@ -40,10 +40,12 @@ textDocumentDidOpen notification = do
 textDocumentDidChange ::
   HandlerMonad m => NotificationMessage 'TextDocumentDidChange -> m ()
 textDocumentDidChange notification = do
-  let nuri = notification ^. J.params
-                  . J.textDocument
-                  . J.uri
-                  . to toNormalizedUri
+  let nuri =
+        notification
+          ^. J.params
+            . J.textDocument
+            . J.uri
+            . to toNormalizedUri
   getVirtualFile nuri >>= \case
     Nothing ->
       -- failed to get document
