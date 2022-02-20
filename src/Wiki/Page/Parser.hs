@@ -1,9 +1,8 @@
 module Wiki.Page.Parser where
 
-import Commonmark (SyntaxSpec)
-import Commonmark qualified
-import Commonmark.Extensions qualified as Commonmark
-import Commonmark.Pandoc qualified as Commonmark
+import Commonmark
+import Commonmark.Extensions
+import Commonmark.Pandoc
 import MyPrelude
 import Text.Pandoc.Builder qualified as Pandoc
 import Text.Pandoc.Definition
@@ -18,22 +17,19 @@ parseErrorFromParsec err =
     line = Parsec.sourceLine $ Parsec.errorPos err
     col = Parsec.sourceColumn $ Parsec.errorPos err
 
-toPandoc :: Commonmark.Cm Commonmark.SourceRange Pandoc.Blocks -> Pandoc
-toPandoc = Pandoc.doc . Commonmark.unCm
+toPandoc :: Cm SourceRange Pandoc.Blocks -> Pandoc
+toPandoc = Pandoc.doc . unCm
 
 syntaxSpec ::
   (Monad m, Typeable m) =>
-  Commonmark.SyntaxSpec
-    m
-    (Commonmark.Cm Commonmark.SourceRange Pandoc.Inlines)
-    (Commonmark.Cm Commonmark.SourceRange Pandoc.Blocks)
+  SyntaxSpec m (Cm SourceRange Pandoc.Inlines) (Cm SourceRange Pandoc.Blocks)
 syntaxSpec =
-  Commonmark.defaultSyntaxSpec
-    <> Commonmark.gfmExtensions
+  defaultSyntaxSpec
+    <> gfmExtensions
 
 parse :: FilePath -> Text -> Either Diagnostic Pandoc
 parse filepath t = do
-  r <- Commonmark.commonmarkWith syntaxSpec filepath t
+  r <- commonmarkWith syntaxSpec filepath t
   case r of
     Left err -> Left $ parseErrorFromParsec err
     Right v -> Right $ toPandoc v
