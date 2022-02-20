@@ -13,6 +13,7 @@ import Wiki.Page qualified as Page
 import Language.LSP.Types.Lens as J
 import Wiki.LSP.Util
 import Wiki.Diagnostics
+import Language.LSP.VFS
 
 type HandlerMonad m = (MonadLsp Config m)
 
@@ -24,22 +25,45 @@ textDocumentDidOpen ::
   HandlerMonad m => NotificationMessage 'TextDocumentDidOpen -> m ()
 textDocumentDidOpen notification = do
   let doc = notification ^. J.params . J.textDocument
-      uri = doc ^. J.uri
-      nuri = toNormalizedUri uri
+      nuri = doc ^. J.uri . to toNormalizedUri
       version = doc ^. J.version . to Just
       contents = doc ^. J.text
-  case Page.parse (fromMaybe "<unknown>" $ uriToFilePath uri) contents of
-    Left d -> do
+  case Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri) contents of
+    Left d ->
       sendDiagnostics nuri version [d]
     Right _ ->
       sendDiagnostics
         nuri
         version
-        [mkDiagnostic GeneralInfo (atLineCol 0 0) "Parsed successfully!"]
+        [mkDiagnostic GeneralInfo (atLineCol 0 0) "didOpen: Parsed successfully!"]
+
+textDocumentDidChange ::
+  HandlerMonad m => NotificationMessage 'TextDocumentDidChange -> m ()
+textDocumentDidChange notification = do
+  let nuri = notification ^. J.params
+                  . J.textDocument
+                  . J.uri
+                  . to toNormalizedUri
+  getVirtualFile nuri >>= \case
+    Nothing ->
+      -- failed to get document
+      pure ()
+    Just vf -> do
+      let version = Just $ virtualFileVersion vf
+          contents = virtualFileText vf
+      case Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri) contents of
+        Left d ->
+          sendDiagnostics nuri version [d]
+        Right _ ->
+          sendDiagnostics
+            nuri
+            version
+            [mkDiagnostic GeneralInfo (atLineCol 0 0) "didChange: Parsed successfully!"]
 
 handlers :: HandlerMonad m => Handlers m
 handlers =
   mconcat
     [ notificationHandler SInitialized initialized,
-      notificationHandler STextDocumentDidOpen textDocumentDidOpen
+      notificationHandler STextDocumentDidOpen textDocumentDidOpen,
+      notificationHandler STextDocumentDidChange textDocumentDidChange
     ]

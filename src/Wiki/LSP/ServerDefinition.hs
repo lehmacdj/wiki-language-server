@@ -37,7 +37,7 @@ serverDefinition =
   ServerDefinition
     { defaultConfig = def,
       onConfigurationChange = onConfigChange,
-      doInitialize = \env _ -> traceM "initialize" >> pure (Right env),
+      doInitialize = \env _ -> pure (Right env),
       staticHandlers = handlers,
       interpretHandler = interpretHandlerM,
       options = serverOptions
