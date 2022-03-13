@@ -35,7 +35,7 @@ import Prettyprinter as X (pretty)
 import Prettyprinter.Render.Text
 
 data DiagnosticKind
-  = InternalError
+  = Bug
   | ParseError
   | GeneralInfo
 
@@ -47,19 +47,19 @@ wlsCode = ("WLS" <>) . tshow
 
 kindCode :: DiagnosticKind -> Text
 kindCode = \case
-  InternalError -> wlsCode 1
+  Bug -> wlsCode 1
   ParseError -> wlsCode 2
   GeneralInfo -> wlsCode 3
 
 kindSeverity :: DiagnosticKind -> DiagnosticSeverity
 kindSeverity = \case
-  InternalError -> DsError
+  Bug -> DsError
   ParseError -> DsError
   GeneralInfo -> DsInfo
 
 kindTags :: DiagnosticKind -> [DiagnosticTag]
 kindTags = \case
-  InternalError -> []
+  Bug -> []
   ParseError -> []
   GeneralInfo -> []
 

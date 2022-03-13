@@ -27,6 +27,7 @@ syntaxSpec =
   defaultSyntaxSpec
     <> gfmExtensions
 
+-- TODO: parse YAML front matter
 parse :: FilePath -> Text -> Either Diagnostic Pandoc
 parse filepath t = do
   r <- commonmarkWith syntaxSpec filepath t

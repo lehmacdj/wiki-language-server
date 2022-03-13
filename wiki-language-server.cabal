@@ -30,6 +30,7 @@ library
       Executable.LSP
       MyPrelude
       Spec
+      TestPrelude
       Wiki.Diagnostics
       Wiki.LSP.Config
       Wiki.LSP.Handlers
@@ -38,6 +39,7 @@ library
       Wiki.LSP.Util
       Wiki.Page
       Wiki.Page.Parser
+      Wiki.Page.Utils
   other-modules:
       Paths_wiki_language_server
   hs-source-dirs:
@@ -85,6 +87,7 @@ library
     , data-default
     , exceptions
     , generic-lens
+    , hspec-expectations
     , lens
     , lsp
     , lsp-types
@@ -100,6 +103,7 @@ library
     , tasty
     , tasty-discover
     , tasty-golden
+    , tasty-hspec
     , tasty-hunit
     , tasty-quickcheck
     , template-haskell
@@ -156,6 +160,7 @@ executable wiki-language-server
     , data-default
     , exceptions
     , generic-lens
+    , hspec-expectations
     , lens
     , lsp
     , lsp-types
@@ -171,6 +176,7 @@ executable wiki-language-server
     , tasty
     , tasty-discover
     , tasty-golden
+    , tasty-hspec
     , tasty-hunit
     , tasty-quickcheck
     , template-haskell
@@ -229,6 +235,7 @@ test-suite wiki-language-server-test
     , data-default
     , exceptions
     , generic-lens
+    , hspec-expectations
     , lens
     , lsp
     , lsp-types
@@ -244,6 +251,7 @@ test-suite wiki-language-server-test
     , tasty
     , tasty-discover
     , tasty-golden
+    , tasty-hspec
     , tasty-hunit
     , tasty-quickcheck
     , template-haskell

@@ -52,12 +52,15 @@ dependencies:
 - validation-selective
 # test dependencies, trying to keep these separate even though they are required
 # by the main lib because our tests are in tree.
+- hspec-expectations
 - tasty
+- tasty-hspec
 - tasty-hunit
 - tasty-discover
 - tasty-golden
 - tasty-quickcheck
 - quickcheck-instances
+
 
 default-extensions:
 - BlockArguments

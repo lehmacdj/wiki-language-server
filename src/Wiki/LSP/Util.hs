@@ -14,3 +14,11 @@ sendDiagnostics uri version diagnostics = do
 
 nuriToFilePath :: NormalizedUri -> Maybe FilePath
 nuriToFilePath = uriToFilePath . fromNormalizedUri
+
+-- | Ranges are [inclusive, exclusive)
+positionInRange :: Position -> Range -> Bool
+positionInRange
+  (Position l c)
+  (Range (Position lStart cStart) (Position lEnd cEnd)) =
+    (l > lStart || l == lStart && c >= cStart)
+      && (l < lEnd || l == lEnd && c < cEnd)

@@ -10,6 +10,7 @@ import Language.LSP.Types
 import Language.LSP.Types.Lens as J
 import Language.LSP.VFS
 import MyPrelude
+import Text.Pandoc.Definition (Pandoc)
 import Wiki.Diagnostics
 import Wiki.LSP.Config
 import Wiki.LSP.Util
@@ -62,10 +63,82 @@ textDocumentDidChange notification = do
             version
             [mkDiagnostic GeneralInfo (atLineCol 0 0) "didChange: Parsed successfully!"]
 
+tryGetContents ::
+  ( MonadLsp Config m,
+    HasParams msg p,
+    HasTextDocument p t,
+    HasUri t Uri
+  ) =>
+  msg ->
+  m (NormalizedUri, TextDocumentVersion, Maybe Text)
+tryGetContents message = do
+  let nuri =
+        message
+          ^. J.params
+            . J.textDocument
+            . J.uri
+            . to toNormalizedUri
+  getVirtualFile nuri <&> \case
+    Nothing -> (nuri, Nothing, Nothing)
+    Just vf -> (nuri, Just (virtualFileVersion vf), Just (virtualFileText vf))
+
+parseDocument :: NormalizedUri -> Text -> Either Diagnostic Pandoc
+parseDocument nuri =
+  Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri)
+
+type Response (m :: Method 'FromClient 'Request) =
+  Either ResponseError (ResponseResult m)
+
+textDocumentDefinition ::
+  HandlerMonad m =>
+  RequestMessage 'TextDocumentDefinition ->
+  m (Response 'TextDocumentDefinition)
+textDocumentDefinition request = runExceptT $ do
+  (nuri, version, mcontents) <- lift $ tryGetContents request
+  contents <- onNothing mcontents $ do
+    throwError $
+      ResponseError
+        { _code = UnknownErrorCode, -- TODO: replace with ResponseFailure when available
+          _message = "Failed to retrieve text from requested document.",
+          _xdata = Nothing
+        }
+  parsed <- onLeft (parseDocument nuri contents) \_diagnostic ->
+    -- we will update the diagnostics on the didChange request if we didn't
+    -- already
+    throwError $
+      ResponseError
+        { _code = InternalError,
+          _message = "Current document state doesn't parse",
+          _xdata = Nothing
+        }
+  let position = request ^. J.params . J.position
+      targetUri = undefined
+      -- TODO: improve this by jumping to the start of text and skipping yaml
+      -- front matter + links etc. that might be at the start of the document
+      targetLocation = Location targetUri (atLineCol 0 0)
+  pure $ InL targetLocation
+
+-- TODO: Why does requestHandler allow more complicated response patterns than
+-- this?. Is there an exception that can be caught to determine if the response
+-- was received and retry? Is there a reason why it would be desireable to send
+-- a response several times? possibly it's just to avoid Monad constraint on m?
+
+-- | Shim for making requestHandler easier to use in the simple way that one
+-- generally wants to use it
+requestHandler' ::
+  forall (m :: Method 'FromClient 'Request) f.
+  Monad f =>
+  SMethod m ->
+  (RequestMessage m -> f (Either ResponseError (ResponseResult m))) ->
+  Handlers f
+requestHandler' s handler = requestHandler s \request responder ->
+  handler request >>= responder
+
 handlers :: HandlerMonad m => Handlers m
 handlers =
   mconcat
     [ notificationHandler SInitialized initialized,
       notificationHandler STextDocumentDidOpen textDocumentDidOpen,
-      notificationHandler STextDocumentDidChange textDocumentDidChange
+      notificationHandler STextDocumentDidChange textDocumentDidChange,
+      requestHandler' STextDocumentDefinition textDocumentDefinition
     ]
