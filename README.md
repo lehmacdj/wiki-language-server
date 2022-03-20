@@ -4,6 +4,7 @@ Language server protocol for markdown notes with wiki style links.
 Currently supports:
 - parses documents and reports diagnostic if parsing failed. IIRC markdown never
   fails to parse so this is pretty much a no-op though.
+- goto definition that implements jumping between notes via links
 
 MVP features (this will be a moving target, and mostly is a smaller list to keep
 me focused on what I'm working on right now):
@@ -13,7 +14,6 @@ Technical concerns, that probably will become relevant when implementing below:
   in lsp package example
 
 Aspires to support at least:
-- goto definition that implements jumping between notes via links
 - autocomplete for note titles when starting a new link
 - automatically transclude note titles (defined by title in yaml front matter or
   otherwise first `<h1>` of the note) into wiki links (e.g. `[[asdf]]` can be
