@@ -22,6 +22,9 @@ Aspires to support at least:
 
 Stretch goals (roughly ordered by priority):
 - autoformatter ala gofmt/ormolu that standardizes line lengths to less than 80
+  - compatibility with prettier, in the sense that prettier doesn't change code
+    formatted by my formatter would be nice (though not necessarily a goal, I'd
+    rather have it format stuff how I want it to)
 - Hover shows a preview of the note under the link or notes containing that word
   if not a link
 - integration with markdownlint or some other linting tool for markdown to catch
