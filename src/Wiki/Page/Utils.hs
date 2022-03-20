@@ -21,10 +21,12 @@ import Text.Megaparsec.Char.Lexer qualified as P
 import Text.Pandoc.Definition
 import Text.Parsec.Pos qualified as Parsec
 import Wiki.LSP.Util
+import Wiki.LinkTarget
 
 type Parser = P.ParsecT Void Text (State String)
 
 data BI = B Block | I Inline
+  deriving (Show, Eq, Ord)
 
 -- | Affine traversal returning the attribute if this element has one, and
 -- nothing otherwise
@@ -75,7 +77,7 @@ attrI f = \case
   n@(Note _) -> pure n
   Span attr i -> Span <$> f attr <*> pure i
 
-getLinkTargetAtPosition :: Pandoc -> Position -> Maybe Uri
+getLinkTargetAtPosition :: Pandoc -> Position -> Maybe LinkTarget
 getLinkTargetAtPosition (Pandoc _meta blocks) p = go . fromList $ map B blocks
   where
     go Empty = Nothing
@@ -86,7 +88,11 @@ getLinkTargetAtPosition (Pandoc _meta blocks) p = go . fromList $ map B blocks
     go (B b :<| rest) = go (seqOf (template . to B <> template . to I) b <> rest)
     go (I i@(preview (attrI . to attrRanges . _Just) -> Just ranges) :<| rest)
       | any (p `positionInRange`) ranges = case i of
-        Link _ _ (url, _) -> Just $ Uri url
+        Link _ _ (slug, "wikilink") ->
+          -- interpret wiki links as relative to the current file as determined
+          -- by the position
+          Just $ Wikilink slug
+        Link _ _ (url, _) -> Just . OtherUri . Uri $ url
         _ -> go (seqOf (template . to B <> template . to I) i <> rest)
       | otherwise = go rest
     go (I i :<| rest) = go (seqOf (template . to B <> template . to I) i <> rest)
@@ -173,8 +179,10 @@ spec_parseRange = describe "pSourceRange" $ do
 sourcePosPairToRange :: (SourcePos, SourcePos) -> Range
 sourcePosPairToRange (p1, p2) =
   Range
-    (Position (Parsec.sourceLine p1) (Parsec.sourceColumn p1))
-    (Position (Parsec.sourceLine p2) (Parsec.sourceColumn p2))
+    -- this needs to adapt parsec's 1 based indexing for LSP protocols 0 based
+    -- indexing
+    (Position (Parsec.sourceLine p1 - 1) (Parsec.sourceColumn p1 - 1))
+    (Position (Parsec.sourceLine p2 - 1) (Parsec.sourceColumn p2 - 1))
 
 attrRanges :: Attr -> Maybe [Range]
 attrRanges (_id, _classes, kvs) = case lookup "data-pos" kvs of

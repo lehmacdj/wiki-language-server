@@ -26,6 +26,7 @@ syntaxSpec ::
 syntaxSpec =
   defaultSyntaxSpec
     <> gfmExtensions
+    <> wikilinksSpec TitleAfterPipe
 
 -- TODO: parse YAML front matter
 parse :: FilePath -> Text -> Either Diagnostic Pandoc

@@ -14,6 +14,7 @@ import Text.Pandoc.Definition (Pandoc)
 import Wiki.Diagnostics
 import Wiki.LSP.Config
 import Wiki.LSP.Util
+import Wiki.LinkTarget
 import Wiki.Page qualified as Page
 
 type HandlerMonad m = (MonadLsp Config m)
@@ -94,7 +95,7 @@ textDocumentDefinition ::
   RequestMessage 'TextDocumentDefinition ->
   m (Response 'TextDocumentDefinition)
 textDocumentDefinition request = runExceptT $ do
-  (nuri, version, mcontents) <- lift $ tryGetContents request
+  (nuri, _version, mcontents) <- lift $ tryGetContents request
   contents <- onNothing mcontents $ do
     throwError $
       ResponseError
@@ -112,11 +113,17 @@ textDocumentDefinition request = runExceptT $ do
           _xdata = Nothing
         }
   let position = request ^. J.params . J.position
-      targetUri = undefined
+  case Page.getLinkTargetAtPosition parsed position of
+    Nothing ->
+      pure . InR . InL $ List []
+    Just link -> do
+      uri <- relativeToWorkingDirectory link
       -- TODO: improve this by jumping to the start of text and skipping yaml
       -- front matter + links etc. that might be at the start of the document
-      targetLocation = Location targetUri (atLineCol 0 0)
-  pure $ InL targetLocation
+      -- might even be better to jump to the first line of the body and skip
+      -- the title
+      let targetLocation = Location uri (atLineCol 0 0)
+      pure $ InL targetLocation
 
 -- TODO: Why does requestHandler allow more complicated response patterns than
 -- this?. Is there an exception that can be caught to determine if the response

@@ -32,6 +32,7 @@ library
       Spec
       TestPrelude
       Wiki.Diagnostics
+      Wiki.LinkTarget
       Wiki.LSP.Config
       Wiki.LSP.Handlers
       Wiki.LSP.Handlers.TH
@@ -85,7 +86,9 @@ library
     , commonmark-pandoc
     , containers
     , data-default
+    , directory
     , exceptions
+    , filepath
     , generic-lens
     , hspec-expectations
     , lens
@@ -158,7 +161,9 @@ executable wiki-language-server
     , commonmark-pandoc
     , containers
     , data-default
+    , directory
     , exceptions
+    , filepath
     , generic-lens
     , hspec-expectations
     , lens
@@ -233,7 +238,9 @@ test-suite wiki-language-server-test
     , commonmark-pandoc
     , containers
     , data-default
+    , directory
     , exceptions
+    , filepath
     , generic-lens
     , hspec-expectations
     , lens

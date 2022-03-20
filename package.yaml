@@ -32,7 +32,9 @@ dependencies:
 - commonmark-pandoc
 - containers
 - data-default
+- directory
 - exceptions
+- filepath
 - generic-lens
 - lens
 - lsp
