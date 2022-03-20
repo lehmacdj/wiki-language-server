@@ -49,6 +49,7 @@ dependencies:
 - prettyprinter-ansi-terminal
 - template-haskell
 - text
+- transformers
 - validation-selective
 # test dependencies, trying to keep these separate even though they are required
 # by the main lib because our tests are in tree.
@@ -74,10 +75,12 @@ default-extensions:
 - DerivingStrategies
 - DuplicateRecordFields
 - FlexibleContexts
+- FlexibleInstances
 - GADTs
 - GeneralizedNewtypeDeriving
 - ImportQualifiedPost
 - LambdaCase
+- MultiParamTypeClasses
 - NamedFieldPuns
 - NoImplicitPrelude
 - OverloadedLabels

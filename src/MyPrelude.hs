@@ -2,13 +2,18 @@ module MyPrelude
   ( -- * Based heavily on ClassyPrelude
     module ClassyPrelude,
 
-    -- * Custom exports, in this module
+    -- * Misc custom exports, in this module
     codiagonal,
     note,
     noteM,
     onNothing,
     onLeft,
     onRight,
+
+    -- * EarlyReturnT and pals
+    EarlyReturnT,
+    returnEarly,
+    runEarlyReturnT,
 
     -- * Various other things; re-exported
     module X,
@@ -59,13 +64,17 @@ import Control.Monad.State as X
     runStateT,
   )
 import Control.Monad.State.Class as X
+import Control.Monad.Trans.Class as X (MonadTrans (..))
 import Data.Default as X (Default (..))
 import Data.Either as X (fromLeft, fromRight)
 import Data.Generics.Labels ()
 import Data.List.NonEmpty as X (NonEmpty (..))
+import Data.Typeable (typeOf)
 import Data.Void as X (Void, absurd)
 import GHC.Stack as X (HasCallStack)
 import GHC.TypeLits as X
+import Orphans ()
+import Prelude as X (showChar, showParen, showString, shows)
 
 -- | Throw an error in place of Nothing. So named because generally the
 -- exception will describe the error that took place causing a result of
@@ -99,3 +108,36 @@ codiagonal :: Either a a -> a
 codiagonal = \case
   Left a -> a
   Right a -> a
+
+newtype EarlyReturnT r m a = EarlyReturnT {unEarlyReturnT :: m a}
+  -- TODO: theoretically it would be nice to add all of the things here,
+  -- but there are so many, and in 99.9% of cases this is probably good enough
+  deriving newtype
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadIO,
+      MonadUnliftIO,
+      MonadState x,
+      MonadReader x
+    )
+
+instance MonadTrans (EarlyReturnT r) where
+  lift = EarlyReturnT
+
+newtype EarlyReturn r = EarlyReturn r
+  deriving anyclass (Exception)
+
+instance forall r. Typeable r => Show (EarlyReturn r) where
+  showsPrec p _ =
+    showParen (p > 10) $
+      showString "EarlyReturn "
+        . shows (typeOf (error "unused arg to typeOf" :: EarlyReturn r))
+
+returnEarly :: (MonadIO m, Typeable r) => r -> EarlyReturnT r m a
+returnEarly = throwIO . EarlyReturn
+
+runEarlyReturnT :: (MonadUnliftIO m, Typeable r) => EarlyReturnT r m r -> m r
+runEarlyReturnT action =
+  unEarlyReturnT $
+    action `catch` \(EarlyReturn r) -> pure r
