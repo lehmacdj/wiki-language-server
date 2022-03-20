@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Wiki.Page.Utils
   ( getLinkTargetAtPosition,
     attrB,
@@ -5,6 +7,7 @@ module Wiki.Page.Utils
 
     -- * tests
     spec_pSourceRange,
+    spec_getLinkTargetAtPosition,
   )
 where
 
@@ -22,6 +25,7 @@ import Text.Pandoc.Definition
 import Text.Parsec.Pos qualified as Parsec
 import Wiki.LSP.Util
 import Wiki.LinkTarget
+import Wiki.Page.TH
 
 type Parser = P.ParsecT Void Text (State String)
 
@@ -92,10 +96,48 @@ getLinkTargetAtPosition (Pandoc _meta blocks) p = go . fromList $ map B blocks
           -- interpret wiki links as relative to the current file as determined
           -- by the position
           Just $ Wikilink slug
-        Link _ _ (url, _) -> Just . OtherUri . Uri $ url
+        Link _ _ (url, _) ->
+          -- TODO: ensure that url is a proper Uri in LSP sense, and possibly
+          -- do some doctoring to make it so or otherwise don't return it
+          -- as a link target
+          Just . OtherUri . Uri $ url
         _ -> go (seqOf (template . to B <> template . to I) i <> rest)
       | otherwise = go rest
     go (I i :<| rest) = go (seqOf (template . to B <> template . to I) i <> rest)
+
+spec_getLinkTargetAtPosition :: Spec
+spec_getLinkTargetAtPosition = do
+  let simpleMarkdown =
+        [md|
+          # Title
+          [[test]]
+          [wikipedia](https://en.wikipedia.org)
+        |]
+  let wikilink p =
+        it ("detects wiki link at " <> show p) $
+          getLinkTargetAtPosition simpleMarkdown p
+            `shouldBe` Just (Wikilink "test")
+  wikilink $ Position 1 0
+  wikilink $ Position 1 2
+  wikilink $ Position 1 5
+  wikilink $ Position 1 7
+  let normalLink p =
+        it ("detects normal link at " <> show p) $
+          getLinkTargetAtPosition simpleMarkdown p
+            `shouldBe` Just (OtherUri . Uri $ "https://en.wikipedia.org")
+  normalLink $ Position 2 0
+  normalLink $ Position 2 10
+  normalLink $ Position 2 11
+  normalLink $ Position 2 36
+  let noLink p =
+        it ("fails to find a link at " <> show p) $
+          getLinkTargetAtPosition simpleMarkdown p
+            `shouldBe` Nothing
+  noLink $ Position 0 0
+  noLink $ Position 0 4
+  noLink $ Position 0 37
+  noLink $ Position 1 37
+  noLink $ Position 4 14
 
 -- performance note: if this turns out to be performance critical, an option
 -- would be to not use the pandoc ast and instead have a custom ast that doesn't

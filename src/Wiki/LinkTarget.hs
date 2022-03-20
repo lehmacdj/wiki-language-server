@@ -4,6 +4,8 @@ import Language.LSP.Types (Uri (Uri))
 import MyPrelude
 import System.Directory
 
+-- | TODO: consider adding anchors; then we could also detect anchor links &
+-- add them to getLinkTargetAtPosition
 data LinkTarget
   = -- | A slug, to be used in creating a wikilink. Most often this will be
     -- interpreted as relative to some directory and suffixed with ".md", but in
@@ -14,7 +16,7 @@ data LinkTarget
     AbsolutePath FilePath
   | -- | Requires a scheme
     OtherUri Uri
-  deriving (Show)
+  deriving (Show, Eq, Ord)
 
 -- | Interpret wikilinks as being relative to
 relativeToWorkingDirectory :: MonadIO m => LinkTarget -> m Uri
