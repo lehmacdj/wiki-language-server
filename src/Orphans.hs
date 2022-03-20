@@ -6,6 +6,7 @@ module Orphans where
 import ClassyPrelude
 import Control.Monad.Trans
 import Language.LSP.Server
+import Orphans.PandocLift ()
 
 instance
   {-# OVERLAPPABLE #-}

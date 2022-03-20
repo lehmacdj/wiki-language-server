@@ -49,6 +49,7 @@ dependencies:
 - prettyprinter-ansi-terminal
 - template-haskell
 - text
+- th-lift-instances
 - transformers
 - validation-selective
 # test dependencies, trying to keep these separate even though they are required
