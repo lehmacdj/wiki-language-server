@@ -41,28 +41,17 @@ textDocumentDidOpen notification = do
 
 textDocumentDidChange ::
   HandlerMonad m => NotificationMessage 'TextDocumentDidChange -> m ()
-textDocumentDidChange notification = do
-  let nuri =
-        notification
-          ^. J.params
-            . J.textDocument
-            . J.uri
-            . to toNormalizedUri
-  getVirtualFile nuri >>= \case
-    Nothing ->
-      -- failed to get document
-      pure ()
-    Just vf -> do
-      let version = Just $ virtualFileVersion vf
-          contents = virtualFileText vf
-      case Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri) contents of
-        Left d ->
-          sendDiagnostics nuri version [d]
-        Right _ ->
-          sendDiagnostics
-            nuri
-            version
-            [mkDiagnostic GeneralInfo (atLineCol 0 0) "didChange: Parsed successfully!"]
+textDocumentDidChange notification = runEarlyReturnT $ do
+  (nuri, version, mcontents) <- tryGetContents notification
+  contents <- onNothing mcontents $ returnEarly ()
+  case parseDocument nuri contents of
+    Left d ->
+      sendDiagnostics nuri version [d]
+    Right _ ->
+      sendDiagnostics
+        nuri
+        version
+        [mkDiagnostic GeneralInfo (atLineCol 0 0) "didChange: Parsed successfully!"]
 
 tryGetContents ::
   ( MonadLsp Config m,
