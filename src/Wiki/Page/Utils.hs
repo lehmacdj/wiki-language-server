@@ -4,7 +4,7 @@ module Wiki.Page.Utils
     attrI,
 
     -- * tests
-    spec_parseRange,
+    spec_pSourceRange,
   )
 where
 
@@ -130,8 +130,8 @@ pRange = do
 pSourceRange :: Parser SourceRange
 pSourceRange = SourceRange <$> pRange `P.sepBy` P.char ';'
 
-spec_parseRange :: Spec
-spec_parseRange = describe "pSourceRange" $ do
+spec_pSourceRange :: Spec
+spec_pSourceRange = do
   "0:0-1:1" `parsesTo` [(Parsec.newPos "" 0 0, Parsec.newPos "" 1 1)]
   -- this doesn't parse due to degeneracy in the leniency for parsing the
   -- filename. See this issue for details:
