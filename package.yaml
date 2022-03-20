@@ -41,9 +41,7 @@ dependencies:
 - monad-control
 - mtl
 - pandoc-types
-- parsec # unfortunately this is used by commonmark at the moment, might be
-         # worth trying to upgrade it to use Megaparsec, may provide speed gains
-         # too
+- parsec
 - parser-combinators
 - prettyprinter
 - prettyprinter-ansi-terminal
