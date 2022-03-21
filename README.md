@@ -33,7 +33,8 @@ Stretch goals (roughly ordered by priority):
 - Optional vim plugin, that does stuff like conceal bits of syntax that are
   unnecessary to see most of the time. An example of the kind of syntax to
   conceal is the stuff to the left of the `|` in a `[[asdf|alt link text]]`
-  link.
+  link. Also the vim plugin should provide a telescope extension for searching
+  notes / backlinks of notes.
 - accurate syntax highlighting via lsp symbols
 
 Won't implement:
