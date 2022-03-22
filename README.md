@@ -8,23 +8,24 @@ Currently supports:
 
 MVP features (this will be a moving target, and mostly is a smaller list to keep
 me focused on what I'm working on right now):
+- autocomplete for note titles when starting a new link
+- automatically transclude note titles (defined by title in yaml front matter or
+  otherwise first `<h1>` of the note) into wiki links (e.g. `[[asdf]]` can be
+  turned into `[[asdf|Note title]]`), this should probably be implemented by
+  means of formatting operations.
 
 Technical concerns, that probably will become relevant when implementing below:
 - Need some global state synchronization like Reactor pattern from Reactor.hs
   in lsp package example
 
 Aspires to support at least:
-- autocomplete for note titles when starting a new link
-- automatically transclude note titles (defined by title in yaml front matter or
-  otherwise first `<h1>` of the note) into wiki links (e.g. `[[asdf]]` can be
-  turned into `[[asdf|Note title]]`), this should probably be implemented by
-  means of formatting operations.
-Stretch goals (roughly ordered by priority):
 - Optional vim plugin, that does stuff like:
   - like conceal bits of syntax that are unnecessary to see most of the time
     - e.g. stuff to the left of the `|` in a `[[asdf|alt link text]]` link.
   - telescope extension for searching notes / backlinks of notes.
   - other vim specific stuff if applicable
+
+Stretch goals (roughly ordered by priority):
 - autoformatter ala gofmt/ormolu that standardizes line lengths to less than 80
   - compatibility with prettier, in the sense that prettier doesn't change code
     formatted by my formatter would be nice (though this is fairly low priority,
