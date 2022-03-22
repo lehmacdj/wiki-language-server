@@ -19,23 +19,27 @@ Aspires to support at least:
   otherwise first `<h1>` of the note) into wiki links (e.g. `[[asdf]]` can be
   turned into `[[asdf|Note title]]`), this should probably be implemented by
   means of formatting operations.
-
 Stretch goals (roughly ordered by priority):
+- Optional vim plugin, that does stuff like:
+  - like conceal bits of syntax that are unnecessary to see most of the time
+    - e.g. stuff to the left of the `|` in a `[[asdf|alt link text]]` link.
+  - telescope extension for searching notes / backlinks of notes.
+  - other vim specific stuff if applicable
 - autoformatter ala gofmt/ormolu that standardizes line lengths to less than 80
   - compatibility with prettier, in the sense that prettier doesn't change code
-    formatted by my formatter would be nice (though not necessarily a goal, I'd
-    rather have it format stuff how I want it to)
+    formatted by my formatter would be nice (though this is fairly low priority,
+    especially I don't want to have to make changes to keep in sync with
+    prettier).
 - Hover shows a preview of the note under the link or notes containing that word
   if not a link
 - integration with markdownlint or some other linting tool for markdown to catch
   syntax problems that would lead to weird rendering; potentially even an
   implementation from scratch of such a tool based on pandoc commonmark parsers
-- Optional vim plugin, that does stuff like conceal bits of syntax that are
-  unnecessary to see most of the time. An example of the kind of syntax to
-  conceal is the stuff to the left of the `|` in a `[[asdf|alt link text]]`
-  link. Also the vim plugin should provide a telescope extension for searching
-  notes / backlinks of notes.
+- obsidian extension for transcluding note titles in places where titled wiki
+  links aren't sufficient (e.g. the graph view / list of notes in the toolbar)
 - accurate syntax highlighting via lsp symbols
+  - potentially possible to even do embedded code blocks using `skylighting`
+    library or similar, which would be pretty cool
 
 Won't implement:
 - Nothing yet!
