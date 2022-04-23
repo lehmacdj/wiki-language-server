@@ -1,7 +1,7 @@
 name:                wiki-language-server
 version:             0.1.0.0
 github:              "lehmacdj/wiki-language-server"
-license:             BSD3
+license:             AGPL-3.0
 author:              "Devin Lehmacher"
 maintainer:          "lehmacdj@gmail.com"
 copyright:           "2022 Devin Lehmacher"

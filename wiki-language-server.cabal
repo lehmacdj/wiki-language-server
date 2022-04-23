@@ -14,7 +14,7 @@ bug-reports:    https://github.com/lehmacdj/wiki-language-server/issues
 author:         Devin Lehmacher
 maintainer:     lehmacdj@gmail.com
 copyright:      2022 Devin Lehmacher
-license:        BSD3
+license:        AGPL-3.0
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
