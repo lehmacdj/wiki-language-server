@@ -1,3 +1,7 @@
+-- TODO: move the thing generating this to this module / make it more like
+-- Wiki.Page.Formatting. I think this free-monad-esque pattern of returning a
+-- value that can be interpreted effectfully is a direction I want to move
+-- towards
 module Wiki.LinkTarget where
 
 import Language.LSP.Types (Uri (Uri))
@@ -18,7 +22,7 @@ data LinkTarget
     OtherUri Uri
   deriving (Show, Eq, Ord)
 
--- | Interpret wikilinks as being relative to
+-- | Interpret wikilinks as being relative to the working directory
 relativeToWorkingDirectory :: MonadIO m => LinkTarget -> m Uri
 relativeToWorkingDirectory link =
   liftIO $

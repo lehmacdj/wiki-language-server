@@ -4,6 +4,7 @@ module Wiki.Page.Utils
   ( getLinkTargetAtPosition,
     attrB,
     attrI,
+    attrRanges,
 
     -- * tests
     spec_pSourceRange,
