@@ -1,7 +1,11 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Wiki.Page.Utils
-  ( getLinkTargetAtPosition,
+  ( -- * get various bits and bobs out of a page
+    getLinkTargetAtPosition,
+    getTitle,
+
+    -- * utils
     attrB,
     attrI,
     attrRanges,
@@ -9,6 +13,7 @@ module Wiki.Page.Utils
     -- * tests
     spec_pSourceRange,
     spec_getLinkTargetAtPosition,
+    spec_getTitle,
   )
 where
 
@@ -237,3 +242,71 @@ attrRanges (_id, _classes, kvs) = case lookup "data-pos" kvs of
     Just $ map sourcePosPairToRange ranges
   Just _ -> Nothing
   Nothing -> Nothing
+
+-- We define the title of a document as the @title@ attribute in a yaml
+-- frontmatter, if that doesn't exist the first heading, and if that doesn't
+-- exist @Nothing@.
+--
+-- There might be room in the future to extend this to be smarter. For example
+-- we could further fall back to the first sentence in the document etc.
+getTitle :: Pandoc -> Maybe Text
+getTitle (Pandoc (Meta meta) body) =
+  meta ^? ix "title" . #_MetaString
+    <|> firstHeading body
+  where
+    firstHeading =
+      foldMapA . preview $
+        #_Header . filteredBy (_1 . only 1) . _3 . to titleSanitizeInline
+    -- this tries to do fairly reasonable things, but isn't very precisely
+    -- defined or well specified
+    titleSanitizeInline = foldMap \case
+      Cite _ rec -> titleSanitizeInline rec
+      Code _ t -> t
+      Emph rec -> titleSanitizeInline rec
+      Image _ c _ -> titleSanitizeInline c
+      LineBreak -> " " -- titles don't want to be multiple lines even if the h1 is
+      Link _ rec _ -> titleSanitizeInline rec
+      Math _ t -> t
+      Note _ -> ""
+      Quoted SingleQuote rec -> "'" <> titleSanitizeInline rec <> "'"
+      Quoted DoubleQuote rec -> "\"" <> titleSanitizeInline rec <> "\""
+      RawInline _ t -> t
+      SmallCaps rec -> titleSanitizeInline rec
+      SoftBreak -> " "
+      Space -> " "
+      Span _ rec -> titleSanitizeInline rec
+      Str t -> t
+      Strikeout rec -> titleSanitizeInline rec
+      Strong rec -> titleSanitizeInline rec
+      Subscript rec -> titleSanitizeInline rec
+      Superscript rec -> titleSanitizeInline rec
+      Underline rec -> titleSanitizeInline rec
+
+spec_getTitle :: Spec
+spec_getTitle = do
+  -- TODO: once yaml frontmatter parsing is implemented, add tests for
+  -- frontmatter component of logic
+  it "gets the title from the heading" $
+    getTitle [md|# I am a title!|] `shouldBe` Just "I am a title!"
+  it "it fails to get the title if there isn't a h1" $
+    getTitle [md|There is no title here|] `shouldBe` Nothing
+  it "takes the first h1 even if there is stuff before it" $
+    getTitle
+      [md|
+        foo bar
+
+        ## subheading before heading for whatever reason
+
+        # A title
+      |]
+      `shouldBe` Just "A title"
+  it "doesn't get confused by several instances of h1" $
+    getTitle
+      [md|
+        # A title
+
+        # Another heading
+
+        # A third heading
+      |]
+      `shouldBe` Just "A title"

@@ -9,6 +9,7 @@ module MyPrelude
     onNothing,
     onLeft,
     onRight,
+    foldMapA,
     r,
 
     -- * EarlyReturnT and pals
@@ -34,8 +35,13 @@ import Control.Lens as X
     Setter',
     Traversal,
     Traversal',
+    at,
+    filtered,
+    filteredBy,
     has,
     hasn't,
+    ix,
+    only,
     over,
     preview,
     set,
@@ -46,6 +52,11 @@ import Control.Lens as X
     (^.),
     (^..),
     (^?),
+    _1,
+    _2,
+    _3,
+    _4,
+    _5,
     _Just,
     _Left,
     _Nothing,
@@ -71,6 +82,7 @@ import Data.Default as X (Default (..))
 import Data.Either as X (fromLeft, fromRight)
 import Data.Generics.Labels ()
 import Data.List.NonEmpty as X (NonEmpty (..))
+import Data.Monoid (Alt (Alt, getAlt))
 import Data.Typeable (typeOf)
 import Data.Void as X (Void, absurd)
 import GHC.Stack as X (HasCallStack)
@@ -121,9 +133,17 @@ codiagonal = \case
   Left a -> a
   Right a -> a
 
+-- | Branch over a 'Foldable' collection of values using the supplied
+--   action.
+--
+-- Taked from Agda-2.6.2.2 and modified to support MonoFoldable
+foldMapA :: (Alternative f, MonoFoldable t) => (Element t -> f b) -> t -> f b
+foldMapA f = getAlt . foldMap (Alt . f)
+
 newtype EarlyReturnT r m a = EarlyReturnT {unEarlyReturnT :: m a}
   -- TODO: theoretically it would be nice to add all of the things here,
   -- but there are so many, and in 99.9% of cases this is probably good enough
+  -- and we can add more incrementally as needed
   deriving newtype
     ( Functor,
       Applicative,
@@ -137,6 +157,10 @@ newtype EarlyReturnT r m a = EarlyReturnT {unEarlyReturnT :: m a}
 instance MonadTrans (EarlyReturnT r) where
   lift = EarlyReturnT
 
+-- There might be a problem here with scoping if one has multiple EarlyReturnT's
+-- because each kind of exception isn't unique. It would be possible to fix this
+-- with a phantom type parameter but because this is an extreme edge case I'm
+-- too lazy to figure it out exactly
 newtype EarlyReturn r = EarlyReturn r
   deriving anyclass (Exception)
 
