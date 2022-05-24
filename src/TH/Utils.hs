@@ -18,9 +18,14 @@ trimQuasiQuotation = trim . pack
       fail "multiline quasi quote must have end marker on separate line and nothing on first line"
     sameSpacePrefixAsFirst =
       fail $
-        "Each line must have at least as many spaces preceeding it as the first line.\n"
-          <> "These will be stripped."
+        "Each line must have at least as many spaces preceeding it as the first"
+          <> " line or be empty.\n"
+          <> "Preceding spaces will be stripped and empty lines will be treated"
+          <> "as empty."
     notLastIsSpaces l = isJust (find (not . isSpace) l)
+    emptyOrStripPrefix prefix t
+      | T.null t = Just t
+      | otherwise = stripPrefix prefix t
     trim x = case T.lines x of
       [] -> pure ""
       [l] -> pure l
@@ -33,7 +38,7 @@ trimQuasiQuotation = trim . pack
           first : _ ->
             let prefix = T.takeWhile (== ' ') first
                 stripped :: [Maybe Text]
-                stripped = map (stripPrefix prefix) middle
+                stripped = map (emptyOrStripPrefix prefix) middle
                 verified = traverse (maybe sameSpacePrefixAsFirst pure) stripped
              in T.unlines <$> verified
       _ -> multiLine
@@ -60,6 +65,28 @@ spec_trimQuasiQuotation = do
           foobar
       |]
       `shouldBe` Just "asdf\n  foobar\n"
+  it "works with empty line as first line" $
+    trimQuasiQuotation
+      [r|
+
+      asdf
+      |]
+      `shouldBe` Just "\n      asdf\n"
+  it "works with empty line in middle of text" $
+    trimQuasiQuotation
+      [r|
+      s
+
+      asdf
+      |]
+      `shouldBe` Just "s\n\nasdf\n"
+  it "works with empty line as last line" $
+    trimQuasiQuotation
+      [r|
+      asdf
+
+      |]
+      `shouldBe` Just "asdf\n\n"
   it "fails with too little indentation on later lines" $
     trimQuasiQuotation
       [r|
