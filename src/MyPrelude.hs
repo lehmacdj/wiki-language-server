@@ -18,6 +18,10 @@ module MyPrelude
     returnEarly,
     runEarlyReturnT,
 
+    -- * ExceptionErrorT
+    ExceptionErrorT,
+    runExceptionErrorT,
+
     -- * Various other things; re-exported
     module X,
   )
@@ -181,6 +185,35 @@ runEarlyReturnT :: (MonadUnliftIO m, Typeable r) => EarlyReturnT r m r -> m r
 runEarlyReturnT action =
   unEarlyReturnT $
     action `catch` \(EarlyReturn r) -> pure r
+
+-- | Like ExceptT but the underlying exception throws and catches exceptions in
+-- the IO monad. This allows giving this type an MonadUnliftIO instance.
+newtype ExceptionErrorT e m a = ExceptionErrorT {unExceptionErrorT :: m a}
+  -- TODO: theoretically it would be nice to add all of the things here,
+  -- but there are so many, and in 99.9% of cases this is probably good enough
+  -- and we can add more incrementally as needed
+  deriving newtype
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadIO,
+      MonadUnliftIO,
+      MonadState x,
+      MonadReader x
+    )
+
+instance MonadTrans (ExceptionErrorT e) where
+  lift = ExceptionErrorT
+
+instance (MonadUnliftIO m, Exception e) => MonadError e (ExceptionErrorT e m) where
+  throwError e = liftIO $ throwIO e
+  catchError (ExceptionErrorT action) continuation =
+    ExceptionErrorT $
+      action `catch` (unExceptionErrorT . continuation)
+
+runExceptionErrorT ::
+  (MonadUnliftIO m, Exception e) => ExceptionErrorT e m a -> m (Either e a)
+runExceptionErrorT = try . unExceptionErrorT
 
 -- |
 --
