@@ -23,7 +23,7 @@ import Wiki.Page.TH
 
 data FormattingOperation
   = -- | Represents an operation that converts a link like @[[random-id]]@ into
-    -- a link like @<!--wls-transcluded-->[[random-id|Note title]]@.
+    -- a link like @<!--wls-->[[random-id|Note title]]@.
     WikilinkTransclusion
       { -- | The slug of the note the title of which should be transcluded
         slug :: Text,
@@ -38,7 +38,7 @@ data FormattingOperation
   deriving (Show, Eq, Ord)
 
 pattern WlsTranscludedMarker :: Text
-pattern WlsTranscludedMarker = "<!--wls-transcluded-->"
+pattern WlsTranscludedMarker = "<!--wls-->"
 
 -- | Marker indicating that a link was transcluded. Should occur directly after
 -- a link in a span that indicates the range of the marker.
@@ -110,26 +110,26 @@ spec_editsForPage = do
     ( WikilinkTransclusion
         "asdf"
         (Range start (Position 0 14))
-        (Range (Position 0 14) (Position 0 36))
+        (Range (Position 0 14) (Position 0 24))
     )
-    [md|[[asdf|Hello]]<!--wls-transcluded-->|]
+    [md|[[asdf|Hello]]<!--wls-->|]
   singleOperation
     "also replaces link with marker without alternate title"
     ( WikilinkTransclusion
         "asdf"
         (Range start (Position 0 8))
-        (Range (Position 0 8) (Position 0 30))
+        (Range (Position 0 8) (Position 0 18))
     )
-    [md|[[asdf]]<!--wls-transcluded-->|]
+    [md|[[asdf]]<!--wls-->|]
   noOperations
     "doesn't replace with modified text without marker"
     [md|[[asdf|Hello]]|]
   noOperations
     "doesn't replace with modified text with misplaced marker"
-    [md|[[asdf|Hello]] <!--wls-transcluded-->|]
+    [md|[[asdf|Hello]] <!--wls-->|]
   noOperations
     "doesn't replace with modified text with misplaced marker"
-    [md|<!--wls-transcluded-->[[asdf|Hello]]|]
+    [md|<!--wls-->[[asdf|Hello]]|]
 
 textEditOfOperation ::
   Monad m =>
