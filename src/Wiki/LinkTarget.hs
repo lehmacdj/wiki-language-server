@@ -7,6 +7,7 @@ module Wiki.LinkTarget where
 import Language.LSP.Types (Uri (Uri))
 import MyPrelude
 import System.Directory
+import Wiki.Slug qualified as Slug
 
 -- | TODO: consider adding anchors; then we could also detect anchor links &
 -- add them to getLinkTargetAtPosition
@@ -32,6 +33,6 @@ relativeToWorkingDirectory link =
 -- relative to that directory
 relativeToDir :: FilePath -> LinkTarget -> Uri
 relativeToDir dir = \case
-  Wikilink slug -> Uri $ "file://" <> pack dir <> "/" <> slug <> ".md"
+  Wikilink slug -> Slug.intoUri dir slug
   AbsolutePath p -> Uri . pack $ "file://" <> p
   OtherUri uri -> uri
