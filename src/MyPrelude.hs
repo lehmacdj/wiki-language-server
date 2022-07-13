@@ -7,6 +7,7 @@ module MyPrelude
     note,
     noteM,
     onNothing,
+    onNothingM,
     onLeft,
     onRight,
     foldMapA,
@@ -121,6 +122,9 @@ noteM err = \case
 
 onNothing :: Applicative m => Maybe a -> m a -> m a
 onNothing = flip (`maybe` pure)
+
+onNothingM :: Monad m => m (Maybe a) -> m a -> m a
+onNothingM action err = action >>= \m -> onNothing m err
 
 onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
 onLeft = flip (`either` pure)
