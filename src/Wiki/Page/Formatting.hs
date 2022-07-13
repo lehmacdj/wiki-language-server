@@ -133,29 +133,39 @@ spec_editsForPage = do
 
 textEditOfOperation ::
   Monad m =>
-  (Text -> m Text) ->
+  -- | function that gets the title to use for the slug, if it returns Nothing
+  -- no edit is produced for the formatting operation
+  (Text -> m (Maybe Text)) ->
   FormattingOperation ->
   m [TextEdit]
 textEditOfOperation resolveSlugTitle = \case
   WikilinkTransclusion slug lr mr -> do
-    title <- resolveSlugTitle slug
-    pure
-      [ TextEdit lr $ "[[" <> slug <> "|" <> title <> "]]",
-        TextEdit mr WlsTranscludedMarker
-      ]
+    m_title <- resolveSlugTitle slug
+    fmap concat <$> for (toList m_title) $ \title ->
+      pure
+        [ TextEdit lr $ "[[" <> slug <> "|" <> title <> "]]",
+          TextEdit mr WlsTranscludedMarker
+        ]
   OrmoluWorkaroundConstructor v -> absurd v
 
 spec_textEditOfOperation :: Spec
 spec_textEditOfOperation = do
-  it "works for WikilinkTransclusion" $ do
-    textEditOfOperation
-      (const (pure "Some Title"))
-      ( WikilinkTransclusion
+  let wikilinkTransclusion =
+        WikilinkTransclusion
           "asdf"
           (Range (Position 0 0) (Position 0 14))
           (Range (Position 0 14) (Position 0 36))
-      )
-      `shouldBe` Identity
-        [ TextEdit (Range (Position 0 0) (Position 0 14)) "[[asdf|Some Title]]",
-          TextEdit (Range (Position 0 14) (Position 0 36)) WlsTranscludedMarker
-        ]
+  describe "WikilinkTransclusion" $ do
+    it "returns a text edit when title is findable" $
+      textEditOfOperation
+        (const (pure (Just "Some Title")))
+        wikilinkTransclusion
+        `shouldBe` Identity
+          [ TextEdit (Range (Position 0 0) (Position 0 14)) "[[asdf|Some Title]]",
+            TextEdit (Range (Position 0 14) (Position 0 36)) WlsTranscludedMarker
+          ]
+    it "doens't return anything when finding a title fails" $
+      textEditOfOperation
+        (const (pure Nothing))
+        wikilinkTransclusion
+        `shouldBe` Identity []
