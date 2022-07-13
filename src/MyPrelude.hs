@@ -8,6 +8,7 @@ module MyPrelude
     noteM,
     onNothing,
     onNothingM,
+    tryIOException,
     onLeft,
     onRight,
     foldMapA,
@@ -129,6 +130,9 @@ onNothing = flip (`maybe` pure)
 
 onNothingM :: Monad m => m (Maybe a) -> m a -> m a
 onNothingM action err = action >>= \m -> onNothing m err
+
+tryIOException :: (MonadUnliftIO m) => m a -> m (Maybe a)
+tryIOException = fmap (either (const Nothing) Just) . try @_ @IOException
 
 onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
 onLeft = flip (`either` pure)
