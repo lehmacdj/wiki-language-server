@@ -5,9 +5,11 @@ module Wiki.Page.Formatting
   ( editsForPage,
     FormattingOptions (..),
     FormattingOperation (..),
+    textEditOfOperation,
 
     -- * tests
     spec_editsForPage,
+    spec_textEditOfOperation,
   )
 where
 
@@ -35,10 +37,13 @@ data FormattingOperation
     OrmoluWorkaroundConstructor Void
   deriving (Show, Eq, Ord)
 
+pattern WlsTranscludedMarker :: Text
+pattern WlsTranscludedMarker = "<!--wls-transcluded-->"
+
 -- | Marker indicating that a link was transcluded. Should occur directly after
 -- a link in a span that indicates the range of the marker.
 pattern WlsTranscluded :: Inline
-pattern WlsTranscluded = RawInline (Format "html") "<!--wls-transcluded-->"
+pattern WlsTranscluded = RawInline (Format "html") WlsTranscludedMarker
 
 pattern Positioned :: Range -> Inline -> Inline
 pattern Positioned range x <- Span (attrRanges -> Just [range]) [x]
@@ -125,3 +130,32 @@ spec_editsForPage = do
   noOperations
     "doesn't replace with modified text with misplaced marker"
     [md|<!--wls-transcluded-->[[asdf|Hello]]|]
+
+textEditOfOperation ::
+  Monad m =>
+  (Text -> m Text) ->
+  FormattingOperation ->
+  m [TextEdit]
+textEditOfOperation resolveSlugTitle = \case
+  WikilinkTransclusion slug lr mr -> do
+    title <- resolveSlugTitle slug
+    pure
+      [ TextEdit lr $ "[[" <> slug <> "|" <> title <> "]]",
+        TextEdit mr WlsTranscludedMarker
+      ]
+  OrmoluWorkaroundConstructor v -> absurd v
+
+spec_textEditOfOperation :: Spec
+spec_textEditOfOperation = do
+  it "works for WikilinkTransclusion" $ do
+    textEditOfOperation
+      (const (pure "Some Title"))
+      ( WikilinkTransclusion
+          "asdf"
+          (Range (Position 0 0) (Position 0 14))
+          (Range (Position 0 14) (Position 0 36))
+      )
+      `shouldBe` Identity
+        [ TextEdit (Range (Position 0 0) (Position 0 14)) "[[asdf|Some Title]]",
+          TextEdit (Range (Position 0 14) (Position 0 36)) WlsTranscludedMarker
+        ]
