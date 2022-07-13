@@ -30,6 +30,7 @@ library
       Executable.LSP
       MyPrelude
       Orphans
+      Orphans.LspTypes
       Orphans.PandocLift
       Spec
       TestPrelude
