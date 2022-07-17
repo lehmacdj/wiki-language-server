@@ -18,8 +18,8 @@ import MyPrelude
 import TestPrelude
 import Text.Pandoc.Definition
 import Text.Pandoc.Walk (query)
-import Wiki.Page (attrRanges)
 import Wiki.Page.TH
+import Wiki.Page.Utils (attrRanges)
 
 data FormattingOperation
   = -- | Represents an operation that converts a link like @[[random-id]]@ into

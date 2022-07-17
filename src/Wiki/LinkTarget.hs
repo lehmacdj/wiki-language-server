@@ -1,7 +1,5 @@
--- TODO: move the thing generating this to this module / make it more like
--- Wiki.Page.Formatting. I think this free-monad-esque pattern of returning a
--- value that can be interpreted effectfully is a direction I want to move
--- towards
+-- This module stores the 'LinkTarget' type and functions for interpreting it
+-- into 'FilePath' based on environmental information.
 module Wiki.LinkTarget where
 
 import Language.LSP.Types (Uri (Uri))

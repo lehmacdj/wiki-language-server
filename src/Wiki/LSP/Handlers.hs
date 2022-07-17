@@ -13,8 +13,10 @@ import Wiki.Diagnostics
 import Wiki.LSP.Config
 import Wiki.LSP.Util
 import Wiki.LinkTarget
-import Wiki.Page qualified as Page
 import Wiki.Page.Formatting qualified as Formatting
+import Wiki.Page.GotoDefinition qualified as GotoDefinition
+import Wiki.Page.Parser qualified as Page
+import Wiki.Page.Utils qualified as Page
 import Wiki.Slug qualified as Slug
 
 type HandlerMonad m = (MonadLsp Config m)
@@ -116,7 +118,7 @@ textDocumentDefinition request = runExceptT $ do
   contents <- onNothing mcontents throwNoContentsAvailable
   parsed <- parseDocumentThrow nuri contents
   let position = request ^. J.params . J.position
-  case Page.getLinkTargetAtPosition parsed position of
+  case GotoDefinition.getLinkTargetAtPosition parsed position of
     Nothing ->
       pure . InR . InL $ List []
     Just link -> do

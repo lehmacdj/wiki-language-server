@@ -42,8 +42,8 @@ library
       Wiki.LSP.Handlers.TH
       Wiki.LSP.ServerDefinition
       Wiki.LSP.Util
-      Wiki.Page
       Wiki.Page.Formatting
+      Wiki.Page.GotoDefinition
       Wiki.Page.Parser
       Wiki.Page.TH
       Wiki.Page.Utils
