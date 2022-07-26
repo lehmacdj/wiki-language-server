@@ -157,11 +157,6 @@ textDocumentFormatting request = runExceptionErrorT $ do
   let edits = Formatting.editsForPage parsed
   List . concat <$> traverse (Formatting.textEditOfOperation titleForSlug) edits
 
--- TODO: Why does requestHandler allow more complicated response patterns than
--- this?. Is there an exception that can be caught to determine if the response
--- was received and retry? Is there a reason why it would be desireable to send
--- a response several times? possibly it's just to avoid Monad constraint on m?
-
 -- | Shim for making requestHandler easier to use in the simple way that one
 -- generally wants to use it
 requestHandler' ::
