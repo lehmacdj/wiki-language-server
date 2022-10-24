@@ -198,6 +198,10 @@ getTitle (Pandoc (Meta meta) body) =
       Note _ -> ""
       Quoted SingleQuote rec -> "'" <> titleSanitizeInline rec <> "'"
       Quoted DoubleQuote rec -> "\"" <> titleSanitizeInline rec <> "\""
+      -- ignore HTML comments, slightly broken in case of weird nested comment
+      -- situations, but HTML in titles should be rare, and weird edge behavior
+      -- is okay for it
+      RawInline _ t | "<!--" `isPrefixOf` t && "-->" `isSuffixOf` t -> ""
       RawInline _ t -> t
       SmallCaps rec -> titleSanitizeInline rec
       SoftBreak -> " "
@@ -238,3 +242,13 @@ spec_getTitle = do
         # A third heading
       |]
       `shouldBe` Just "A title"
+  it "ignores comments" $
+    -- this behavior is important for properly handling titles that themselves
+    -- have a link to another note in them besides generally being sensible
+    -- behavior
+    getTitle
+      [md|
+        # A title with<!--a comment--> in it
+        Body content
+      |]
+    `shouldBe` Just "A title with in it"
