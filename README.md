@@ -23,6 +23,7 @@ Aspires to eventually support at least:
     - e.g. stuff to the left of the `|` in a `[[asdf|alt link text]]` link.
     - This can use [Semantic Tokens](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens)
       - propose a `hidden` semantic token modifier that indicates that a symbol should be hidden
+    - Maybe also doable with [inlay hints](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint), though this would bend what that's supposed to do
 - warnings for misleading/likely to be incorrect markup
   - integration with markdownlint or some other linting tool for markdown to catch syntax problems that would lead to weird rendering; potentially even an implementation from scratch of such a tool based on pandoc commonmark parsers
 
