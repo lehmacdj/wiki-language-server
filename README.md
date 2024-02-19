@@ -13,6 +13,7 @@ me focused on what I'm working on/thinking about right now):
   - currently thinking just a fairly simple text file that serializes an in memory data structure because the amount of data should be small enough that that is viable. Might be a better idea to immediately go for sqlite or some other embedded database though, to avoid scaling problems as my number of notes grows
 - autocomplete for note titles when starting a new link
 - autocomplete for tags (when editing in YAML frontmatter)
+- autocomplete for GitHub style id link targets (e.g. a heading titled "Wiki Language Server" turns into `#wiki-language-server`)
 - A Vim Plugin that offers
   - telescope extension for searching notes / backlinks of notes.
     - mostly implemented via commands in the language server
@@ -22,7 +23,7 @@ Aspires to eventually support at least:
   - like conceal bits of syntax that are unnecessary to see most of the time
     - e.g. stuff to the left of the `|` in a `[[asdf|alt link text]]` link.
     - This can use [Semantic Tokens](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens)
-      - propose a `hidden` semantic token modifier that indicates that a symbol should be hidden
+      - use a custom `hidden` semantic token modifier that indicates that a symbol should be hidden
     - Maybe also doable with [inlay hints](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint), though this would bend what that's supposed to do
 - warnings for misleading/likely to be incorrect markup
   - integration with markdownlint or some other linting tool for markdown to catch syntax problems that would lead to weird rendering; potentially even an implementation from scratch of such a tool based on pandoc commonmark parsers
