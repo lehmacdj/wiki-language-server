@@ -19,6 +19,7 @@ import Language.LSP.Types as X
     Location (..),
     Position (..),
     Range (..),
+    UInt,
     Uri (..),
     type (|?) (..),
   )
@@ -64,13 +65,13 @@ kindTags = \case
   GeneralInfo -> []
 
 onLine :: Int -> Range
-onLine line = Range (Position line 0) (Position (line + 1) 0)
+onLine (fromIntegral -> line) = Range (Position line 0) (Position (line + 1) 0)
 
 -- | For cases where we don't have a start and an end point start the range at
 -- the current location, and go until the start of the next line, as this is
 -- the best estimate of the precise range of the error that we can give.
 atLineCol :: Int -> Int -> Range
-atLineCol line col = Range (Position line col) (Position (line + 1) 0)
+atLineCol (fromIntegral -> line) (fromIntegral -> col) = Range (Position line col) (Position (line + 1) 0)
 
 layoutLspDiagnostic :: Doc ann -> SimpleDocStream ann
 layoutLspDiagnostic =

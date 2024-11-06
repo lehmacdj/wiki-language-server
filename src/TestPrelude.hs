@@ -8,7 +8,7 @@ module TestPrelude
   )
 where
 
+import Test.Hspec as X (Spec, describe, it)
 import Test.Hspec.Expectations as X
 import Test.Tasty as X
 import Test.Tasty.HUnit as X
-import Test.Tasty.Hspec as X (Spec, describe, it)

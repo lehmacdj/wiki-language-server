@@ -47,22 +47,23 @@ dependencies:
 - parser-combinators
 - prettyprinter
 - prettyprinter-ansi-terminal
+- sqlite-simple
 - template-haskell
 - text
 - th-lift-instances
 - transformers
-- validation-selective
+- xdg-basedir
 # test dependencies, trying to keep these separate even though they are required
 # by the main lib because our tests are in tree.
+- hspec
 - hspec-expectations
+- quickcheck-instances
 - tasty
-- tasty-hspec
-- tasty-hunit
 - tasty-discover
 - tasty-golden
+- tasty-hspec
+- tasty-hunit
 - tasty-quickcheck
-- quickcheck-instances
-
 
 default-extensions:
 - BlockArguments

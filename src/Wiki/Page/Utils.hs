@@ -161,8 +161,8 @@ sourcePosPairToRange (p1, p2) =
   Range
     -- this needs to adapt parsec's 1 based indexing for LSP protocols 0 based
     -- indexing
-    (Position (Parsec.sourceLine p1 - 1) (Parsec.sourceColumn p1 - 1))
-    (Position (Parsec.sourceLine p2 - 1) (Parsec.sourceColumn p2 - 1))
+    (Position (fromIntegral (Parsec.sourceLine p1) - 1) (fromIntegral (Parsec.sourceColumn p1) - 1))
+    (Position (fromIntegral (Parsec.sourceLine p2) - 1) (fromIntegral (Parsec.sourceColumn p2) - 1))
 
 attrRanges :: Attr -> Maybe [Range]
 attrRanges (_id, _classes, kvs) = case lookup "data-pos" kvs of
