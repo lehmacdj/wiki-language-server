@@ -4,7 +4,7 @@ module Wiki.LSP.Handlers (handlers) where
 import Data.Text.IO qualified as Text
 import Language.LSP.Server
 import Language.LSP.Types
-import Language.LSP.Types.Lens as J
+import Language.LSP.Types.Lens as J hiding (to)
 import Language.LSP.VFS
 import MyPrelude
 import System.Directory (getCurrentDirectory)
@@ -19,14 +19,12 @@ import Wiki.Page.Parser qualified as Page
 import Wiki.Page.Utils qualified as Page
 import Wiki.Slug qualified as Slug
 
-type HandlerMonad m = (MonadLsp Config m)
-
 initialized ::
-  HandlerMonad m => NotificationMessage 'Initialized -> m ()
+  MonadLsp Config m => NotificationMessage 'Initialized -> m ()
 initialized _n = pure ()
 
 textDocumentDidOpen ::
-  HandlerMonad m => NotificationMessage 'TextDocumentDidOpen -> m ()
+  MonadLsp Config m => NotificationMessage 'TextDocumentDidOpen -> m ()
 textDocumentDidOpen notification = do
   let doc = notification ^. J.params . J.textDocument
       nuri = doc ^. J.uri . to toNormalizedUri
@@ -42,7 +40,7 @@ textDocumentDidOpen notification = do
         [mkDiagnostic GeneralInfo (atLineCol 0 0) "didOpen: Parsed successfully!"]
 
 textDocumentDidChange ::
-  HandlerMonad m => NotificationMessage 'TextDocumentDidChange -> m ()
+  MonadLsp Config m => NotificationMessage 'TextDocumentDidChange -> m ()
 textDocumentDidChange notification = runEarlyReturnT $ do
   (nuri, version, mcontents) <- tryGetContents notification
   contents <- onNothing mcontents $ returnEarly ()
@@ -109,8 +107,20 @@ throwDocumentStateDoesNotParse =
         _xdata = Nothing
       }
 
+rethrowIOException :: (MonadUnliftIO m, MonadError ResponseError m) => m a -> m a
+rethrowIOException action =
+  action `catch` \ioe ->
+    throwError $
+      ResponseError
+        { _code = InternalError,
+          _message =
+            "Encountered unrecoverable IO error during request: "
+              <> show ioe,
+          _xdata = Nothing
+        }
+
 textDocumentDefinition ::
-  HandlerMonad m =>
+  MonadLsp Config m =>
   RequestMessage 'TextDocumentDefinition ->
   m (Response 'TextDocumentDefinition)
 textDocumentDefinition request = runExceptT $ do
@@ -130,24 +140,27 @@ textDocumentDefinition request = runExceptT $ do
       let targetLocation = Location uri (atLineCol 0 0)
       pure $ InL targetLocation
 
--- | Get the title for a slug returning Nothing if the file isn't found or we
--- can't find the title in the page
-titleForSlug ::
-  (HandlerMonad m, MonadError ResponseError m) => Text -> m (Maybe Text)
-titleForSlug slug = do
+pageForSlug ::
+  (MonadLsp Config m, MonadError ResponseError m) => Text -> m Pandoc
+pageForSlug = do
   currentDirectory <- liftIO getCurrentDirectory
   let path = Slug.intoNormalizedUri currentDirectory slug
   m_vf <- getVirtualFile path
-  m_contents <- case m_vf of
+  contents <- case m_vf of
     Nothing ->
-      tryIOException . liftIO . Text.readFile $
+      rethrowIOException . liftIO . Text.readFile $
         Slug.intoFilePathRelativeToDir currentDirectory slug
-    Just vf -> pure . Just $ virtualFileText vf
-  m_page <- for m_contents $ parseDocumentThrow path
-  pure $ Page.getTitle =<< m_page
+    Just vf -> pure $ virtualFileText vf
+  parseDocumentThrow contents
+
+-- | Get the title for a slug returning Nothing if the file isn't found or we
+-- can't find the title in the page
+titleForSlug ::
+  (MonadLsp Config m, MonadError ResponseError m) => Text -> m (Maybe Text)
+titleForSlug slug = Page.getTitle <$> pageForSlug slug
 
 textDocumentFormatting ::
-  HandlerMonad m =>
+  MonadLsp Config m =>
   RequestMessage 'TextDocumentFormatting ->
   m (Response 'TextDocumentFormatting)
 textDocumentFormatting request = runExceptionErrorT $ do
@@ -168,7 +181,7 @@ requestHandler' ::
 requestHandler' s handler = requestHandler s \request responder ->
   handler request >>= responder
 
-handlers :: HandlerMonad m => Handlers m
+handlers :: MonadLsp Config m => Handlers m
 handlers =
   mconcat
     [ notificationHandler SInitialized initialized,

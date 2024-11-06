@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -29,6 +29,7 @@ library
   exposed-modules:
       Executable.LSP
       MyPrelude
+      NoteInfoCache
       Orphans
       Orphans.LspTypes
       Orphans.PandocLift
@@ -44,10 +45,12 @@ library
       Wiki.LSP.Util
       Wiki.Page.Formatting
       Wiki.Page.GotoDefinition
+      Wiki.Page.IO
       Wiki.Page.Parser
       Wiki.Page.TH
       Wiki.Page.Utils
       Wiki.Slug
+      XdgPaths
   other-modules:
       Paths_wiki_language_server
   hs-source-dirs:
@@ -99,6 +102,7 @@ library
     , exceptions
     , filepath
     , generic-lens
+    , hspec
     , hspec-expectations
     , lens
     , lsp
@@ -112,6 +116,7 @@ library
     , prettyprinter
     , prettyprinter-ansi-terminal
     , quickcheck-instances
+    , sqlite-simple
     , tasty
     , tasty-discover
     , tasty-golden
@@ -122,7 +127,7 @@ library
     , text
     , th-lift-instances
     , transformers
-    , validation-selective
+    , xdg-basedir
   default-language: Haskell2010
 
 executable wiki-language-server
@@ -178,6 +183,7 @@ executable wiki-language-server
     , exceptions
     , filepath
     , generic-lens
+    , hspec
     , hspec-expectations
     , lens
     , lsp
@@ -191,6 +197,7 @@ executable wiki-language-server
     , prettyprinter
     , prettyprinter-ansi-terminal
     , quickcheck-instances
+    , sqlite-simple
     , tasty
     , tasty-discover
     , tasty-golden
@@ -201,8 +208,8 @@ executable wiki-language-server
     , text
     , th-lift-instances
     , transformers
-    , validation-selective
     , wiki-language-server
+    , xdg-basedir
   default-language: Haskell2010
 
 test-suite wiki-language-server-test
@@ -259,6 +266,7 @@ test-suite wiki-language-server-test
     , exceptions
     , filepath
     , generic-lens
+    , hspec
     , hspec-expectations
     , lens
     , lsp
@@ -272,6 +280,7 @@ test-suite wiki-language-server-test
     , prettyprinter
     , prettyprinter-ansi-terminal
     , quickcheck-instances
+    , sqlite-simple
     , tasty
     , tasty-discover
     , tasty-golden
@@ -282,6 +291,6 @@ test-suite wiki-language-server-test
     , text
     , th-lift-instances
     , transformers
-    , validation-selective
     , wiki-language-server
+    , xdg-basedir
   default-language: Haskell2010
