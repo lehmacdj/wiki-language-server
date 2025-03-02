@@ -45,15 +45,15 @@ textDocumentDidOpen notification = do
 textDocumentDidChange ::
   (MonadLsp Config m) => TNotificationMessage 'Method_TextDocumentDidChange -> m ()
 textDocumentDidChange notification = withEarlyReturn $ do
-  (nuri, version, mcontents) <- tryGetContents notification
-  contents <- onNothing mcontents $ returnEarly ()
+  (nuri, mVersionContents) <- tryGetContents notification
+  (version, contents) <- onNothing mVersionContents $ returnEarly ()
   case parseDocument nuri contents of
     Left d ->
-      sendDiagnostics nuri version [d]
+      sendDiagnostics nuri (Just version) [d]
     Right _ ->
       sendDiagnostics
         nuri
-        version
+        (Just version)
         [mkDiagnostic GeneralInfo (atLineCol 0 0) "didChange: Parsed successfully!"]
 
 tryGetContents ::
@@ -63,17 +63,39 @@ tryGetContents ::
     HasUri t Uri
   ) =>
   msg ->
-  m (NormalizedUri, Maybe Int32, Maybe Text)
-tryGetContents message = do
-  let nuri =
-        message
-          ^. J.params
-          . J.textDocument
-          . J.uri
-          . to toNormalizedUri
+  m (NormalizedUri, Maybe (Int32, Text))
+tryGetContents message =
+  let uri = message ^. J.params . J.textDocument . J.uri
+   in tryGetVfsUriContents uri
+
+tryGetVfsUriContents ::
+  (MonadLsp Config m) =>
+  Uri ->
+  m (NormalizedUri, Maybe (Int32, Text))
+tryGetVfsUriContents uri = do
+  let nuri = toNormalizedUri uri
   getVirtualFile nuri <&> \case
-    Nothing -> (nuri, Nothing, Nothing)
-    Just vf -> (nuri, Just (virtualFileVersion vf), Just (virtualFileText vf))
+    Nothing -> (nuri, Nothing)
+    Just vf -> (nuri, Just (virtualFileVersion vf, virtualFileText vf))
+
+tryGetUriContents ::
+  (MonadLsp Config m) =>
+  Uri ->
+  -- | if the version is provided, the contents were found in the VFS
+  -- otherwise we read the contents from the filesystem if it isn't Nothing
+  m (NormalizedUri, Maybe Int32, Maybe Text)
+tryGetUriContents uri = withEarlyReturn do
+  (nuri, mVfsContents) <- tryGetVfsUriContents uri
+  case mVfsContents of
+    Just (version, contents) -> returnEarly (nuri, Just version, Just contents)
+    Nothing -> pure ()
+  filePath <-
+    onNothing
+      (nuriToFilePath nuri)
+      (returnEarly (nuri, Nothing @Int32, Nothing @Text))
+  try @_ @IOError (readFileUtf8 filePath) <&> \case
+    Left _ -> (nuri, Nothing, Nothing)
+    Right contents -> (nuri, Nothing, Just contents)
 
 parseDocument :: NormalizedUri -> Text -> Either Diagnostic Pandoc
 parseDocument nuri =
@@ -129,22 +151,34 @@ textDocumentDefinition ::
   (MonadLsp Config m) =>
   TRequestMessage 'Method_TextDocumentDefinition ->
   m (Response 'Method_TextDocumentDefinition)
-textDocumentDefinition request = runExceptT $ do
-  (nuri, _version, mcontents) <- lift $ tryGetContents request
-  contents <- onNothing mcontents throwNoContentsAvailable
+textDocumentDefinition request = runExceptionErrorT . withEarlyReturn $ do
+  (nuri, mVersionContents) <- lift $ tryGetContents request
+  (_, contents) <- onNothing mVersionContents throwNoContentsAvailable
   parsed <- parseDocumentThrow nuri contents
   let position = request ^. J.params . J.position
-  case GotoDefinition.getLinkTargetAtPosition parsed position of
-    Nothing ->
-      pure . InR . InL $ []
-    Just link -> do
-      uri <- relativeToWorkingDirectory link
-      -- TODO: improve this by jumping to the start of text and skipping yaml
-      -- front matter + links etc. that might be at the start of the document
-      -- might even be better to jump to the first line of the body and skip
-      -- the title
-      let targetLocation = Definition . InL $ Location uri (atLineCol 0 0)
-      pure $ InL targetLocation
+  link <-
+    onNothing
+      (GotoDefinition.getLinkTargetAtPosition parsed position)
+      ( returnEarly @(MessageResult 'Method_TextDocumentDefinition)
+          (InR . InL $ [])
+      )
+  -- We have the target link, now we just need to try to figure out where to
+  -- jump within it. We try to compute the location of the first non-heading
+  -- paragraph defaulting to the start of the document if we can't find one
+  targetUri <- relativeToWorkingDirectory link
+  let targetLocation p = InL . Definition . InL $ Location targetUri p
+  (targetNuri, _targetNuriVersion, mTargetContents) <- tryGetUriContents targetUri
+  targetContents <-
+    onNothing mTargetContents . returnEarly $ targetLocation (atLineCol 0 0)
+  targetParsed <-
+    onLeft
+      (parseDocument targetNuri targetContents)
+      (const . returnEarly $ targetLocation (atLineCol 0 0))
+  pos <-
+    onNothing
+      (Page.getFirstLineAfterFirstH1 targetParsed)
+      (returnEarly . targetLocation $ atLineCol 0 0)
+  pure $ targetLocation (rangeFromPosition pos)
 
 pageForSlug ::
   (MonadLsp Config m, MonadTResponseError method m) => Text -> m Pandoc
@@ -172,8 +206,8 @@ textDocumentFormatting ::
   TRequestMessage 'Method_TextDocumentFormatting ->
   m (Response 'Method_TextDocumentFormatting)
 textDocumentFormatting request = runExceptionErrorT $ do
-  (nuri, _version, mcontents) <- lift $ tryGetContents request
-  contents <- onNothing mcontents throwNoContentsAvailable
+  (nuri, mVersionContents) <- lift $ tryGetContents request
+  (_, contents) <- onNothing mVersionContents throwNoContentsAvailable
   parsed <- parseDocumentThrow nuri contents
   let edits = Formatting.editsForPage parsed
   InL . concat <$> traverse (Formatting.textEditOfOperation titleForSlug) edits

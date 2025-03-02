@@ -1,8 +1,6 @@
 module Wiki.Diagnostics
   ( DiagnosticKind (..),
     mkDiagnostic,
-    onLine,
-    atLineCol,
 
     -- * Re-exports from Language.LSP.Protocol.Types
     module X,
@@ -61,15 +59,6 @@ kindTags = \case
   Bug -> Nothing
   ParseError -> Nothing
   GeneralInfo -> Nothing
-
-onLine :: Int -> Range
-onLine (fromIntegral -> line) = Range (Position line 0) (Position (line + 1) 0)
-
--- | For cases where we don't have a start and an end point start the range at
--- the current location, and go until the start of the next line, as this is
--- the best estimate of the precise range of the error that we can give.
-atLineCol :: Int -> Int -> Range
-atLineCol (fromIntegral -> line) (fromIntegral -> col) = Range (Position line col) (Position (line + 1) 0)
 
 layoutLspDiagnostic :: Doc ann -> SimpleDocStream ann
 layoutLspDiagnostic =

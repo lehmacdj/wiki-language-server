@@ -3,6 +3,7 @@
 module Wiki.Page.Utils
   ( -- * get various bits and bobs out of a page
     getTitle,
+    getFirstLineAfterFirstH1,
 
     -- * utils
     attrB,
@@ -12,10 +13,12 @@ module Wiki.Page.Utils
     -- * tests
     spec_pSourceRange,
     spec_getTitle,
+    spec_getFirstLineAfterFirstH1,
   )
 where
 
 import Commonmark.Types (SourcePos, SourceRange (..))
+import Language.LSP.Protocol.Lens qualified as J
 import Language.LSP.Protocol.Types (Position (Position), Range (Range))
 import MyPrelude
 import TestPrelude
@@ -24,6 +27,7 @@ import Text.Megaparsec.Char qualified as P
 import Text.Megaparsec.Char.Lexer qualified as P
 import Text.Pandoc.Definition
 import Text.Parsec.Pos qualified as Parsec
+import Wiki.LSP.Util
 import Wiki.Page.TH
 
 type Parser = P.ParsecT Void Text (State String)
@@ -193,35 +197,36 @@ getTitle (Pandoc (Meta meta) body) =
         $ #_Header
         . filteredBy (_1 . only 1)
         . _3
-        . to titleSanitizeInline
-    -- this tries to do fairly reasonable things, but isn't very precisely
-    -- defined or well specified
-    titleSanitizeInline = foldMap \case
-      Cite _ rec -> titleSanitizeInline rec
-      Code _ t -> t
-      Emph rec -> titleSanitizeInline rec
-      Image _ c _ -> titleSanitizeInline c
-      LineBreak -> " " -- titles don't want to be multiple lines even if the h1 is
-      Link _ rec _ -> titleSanitizeInline rec
-      Math _ t -> t
-      Note _ -> ""
-      Quoted SingleQuote rec -> "'" <> titleSanitizeInline rec <> "'"
-      Quoted DoubleQuote rec -> "\"" <> titleSanitizeInline rec <> "\""
-      -- ignore HTML comments, slightly broken in case of weird nested comment
-      -- situations, but HTML in titles should be rare, and weird edge behavior
-      -- is okay for it
-      RawInline _ t | "<!--" `isPrefixOf` t && "-->" `isSuffixOf` t -> ""
-      RawInline _ t -> t
-      SmallCaps rec -> titleSanitizeInline rec
-      SoftBreak -> " "
-      Space -> " "
-      Span _ rec -> titleSanitizeInline rec
-      Str t -> t
-      Strikeout rec -> titleSanitizeInline rec
-      Strong rec -> titleSanitizeInline rec
-      Subscript rec -> titleSanitizeInline rec
-      Superscript rec -> titleSanitizeInline rec
-      Underline rec -> titleSanitizeInline rec
+        . to sanitizeTitleInline
+
+-- | Sanitize the title by removing any elements that are not text
+sanitizeTitleInline :: [Inline] -> Text
+sanitizeTitleInline = foldMap \case
+  Cite _ rec -> sanitizeTitleInline rec
+  Code _ t -> t
+  Emph rec -> sanitizeTitleInline rec
+  Image _ c _ -> sanitizeTitleInline c
+  LineBreak -> " " -- titles don't want to be multiple lines even if the h1 is
+  Link _ rec _ -> sanitizeTitleInline rec
+  Math _ t -> t
+  Note _ -> ""
+  Quoted SingleQuote rec -> "'" <> sanitizeTitleInline rec <> "'"
+  Quoted DoubleQuote rec -> "\"" <> sanitizeTitleInline rec <> "\""
+  -- ignore HTML comments, slightly broken in case of weird nested comment
+  -- situations, but HTML in titles should be rare, and weird edge behavior
+  -- is okay for it
+  RawInline _ t | "<!--" `isPrefixOf` t && "-->" `isSuffixOf` t -> ""
+  RawInline _ t -> t
+  SmallCaps rec -> sanitizeTitleInline rec
+  SoftBreak -> " "
+  Space -> " "
+  Span _ rec -> sanitizeTitleInline rec
+  Str t -> t
+  Strikeout rec -> sanitizeTitleInline rec
+  Strong rec -> sanitizeTitleInline rec
+  Subscript rec -> sanitizeTitleInline rec
+  Superscript rec -> sanitizeTitleInline rec
+  Underline rec -> sanitizeTitleInline rec
 
 spec_getTitle :: Spec
 spec_getTitle = do
@@ -256,13 +261,6 @@ spec_getTitle = do
   it "ignores comments"
     $
     -- this behavior is important for properly handling titles that themselves
-    -- this behavior is important for properly handling titles that themselves
-    -- have a link to another note in them besides generally being sensible
-    -- have a link to another note in them besides generally being sensible
-    -- behavior
-    -- behavior
-
-    -- this behavior is important for properly handling titles that themselves
     -- have a link to another note in them besides generally being sensible
     -- behavior
     getTitle
@@ -271,3 +269,60 @@ spec_getTitle = do
         Body content
       |]
     `shouldBe` Just "A title with in it"
+
+getFirstLineAfterFirstH1 :: Pandoc -> Maybe Position
+getFirstLineAfterFirstH1 (Pandoc _ body) =
+  foldMapA
+    ( preview
+        $ #_Header
+        . filteredBy (_1 . only 1)
+        . _2
+        . to attrRanges
+        . _Just
+        . _head
+        . J.start
+        . to (`colOnNextLine` 0)
+    )
+    body
+
+spec_getFirstLineAfterFirstH1 :: Spec
+spec_getFirstLineAfterFirstH1 = do
+  it "gets the title from the heading"
+    $ getFirstLineAfterFirstH1 [md|# I am a title!|]
+    `shouldBe` Just (posAtLineCol 1 0)
+  it "it fails to get the title if there isn't a h1"
+    $ getFirstLineAfterFirstH1 [md|There is no title here|]
+    `shouldBe` Nothing
+  it "takes the first h1 even if there is stuff before it"
+    $ getFirstLineAfterFirstH1
+      [md|
+        foo bar
+
+        ## subheading before heading for whatever reason
+
+        # A title
+      |]
+    `shouldBe` Just (posAtLineCol 5 0)
+  it "doesn't get confused by several instances of h1"
+    $ getFirstLineAfterFirstH1
+      [md|
+        # A title
+
+        # Another heading
+
+        # A third heading
+      |]
+    `shouldBe` Just (posAtLineCol 1 0)
+  it "isn't confused by yaml front matter"
+    $ getFirstLineAfterFirstH1
+      [md|
+        ---
+        tags:
+        - foo
+        - bar
+        ---
+
+        # A title with<!--a comment--> in it
+        Body content
+      |]
+    `shouldBe` Just (posAtLineCol 7 0)

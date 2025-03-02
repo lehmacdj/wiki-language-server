@@ -29,6 +29,10 @@ library
   exposed-modules:
       Executable.LSP
       MyPrelude
+      MyPrelude.EarlyReturn
+      MyPrelude.EarlyReturn.Class
+      MyPrelude.ExceptionErrorT
+      MyPrelude.RawStrings
       NoteInfoCache
       Orphans
       Orphans.LspTypes

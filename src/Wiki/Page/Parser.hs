@@ -9,6 +9,7 @@ import Text.Pandoc.Definition
 import Text.Parsec.Error qualified as Parsec
 import Text.Parsec.Pos qualified as Parsec
 import Wiki.Diagnostics
+import Wiki.LSP.Util
 
 parseErrorFromParsec :: Parsec.ParseError -> Diagnostic
 parseErrorFromParsec err =
