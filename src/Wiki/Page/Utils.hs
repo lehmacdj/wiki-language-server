@@ -147,14 +147,17 @@ spec_pSourceRange = do
       let r = evalState (P.runParserT (pSourceRange <* P.eof) "<test>" x) ""
        in left P.errorBundlePretty r
     failsToParse x =
-      it (show x <> " fails to parse") $
-        runParser x `shouldSatisfy` has _Left
+      it (show x <> " fails to parse")
+        $ runParser x
+        `shouldSatisfy` has _Left
     x `parsesTo` y =
-      it (show x <> " parses as " <> show (SourceRange y)) $
-        runParser x `shouldBe` Right (SourceRange y)
+      it (show x <> " parses as " <> show (SourceRange y))
+        $ runParser x
+        `shouldBe` Right (SourceRange y)
     parseShowRoundtrips x =
-      it (show x <> " parsed then shown is itself") $
-        (tshow <$> runParser x) `shouldBe` Right x
+      it (show x <> " parsed then shown is itself")
+        $ (tshow <$> runParser x)
+        `shouldBe` Right x
 
 sourcePosPairToRange :: (SourcePos, SourcePos) -> Range
 sourcePosPairToRange (p1, p2) =
@@ -179,12 +182,18 @@ attrRanges (_id, _classes, kvs) = case lookup "data-pos" kvs of
 -- we could further fall back to the first sentence in the document etc.
 getTitle :: Pandoc -> Maybe Text
 getTitle (Pandoc (Meta meta) body) =
-  meta ^? ix "title" . #_MetaString
+  meta
+    ^? ix "title"
+    . #_MetaString
     <|> firstHeading body
   where
     firstHeading =
-      foldMapA . preview $
-        #_Header . filteredBy (_1 . only 1) . _3 . to titleSanitizeInline
+      foldMapA
+        . preview
+        $ #_Header
+        . filteredBy (_1 . only 1)
+        . _3
+        . to titleSanitizeInline
     -- this tries to do fairly reasonable things, but isn't very precisely
     -- defined or well specified
     titleSanitizeInline = foldMap \case
@@ -218,12 +227,14 @@ spec_getTitle :: Spec
 spec_getTitle = do
   -- TODO: once yaml frontmatter parsing is implemented, add tests for
   -- frontmatter component of logic
-  it "gets the title from the heading" $
-    getTitle [md|# I am a title!|] `shouldBe` Just "I am a title!"
-  it "it fails to get the title if there isn't a h1" $
-    getTitle [md|There is no title here|] `shouldBe` Nothing
-  it "takes the first h1 even if there is stuff before it" $
-    getTitle
+  it "gets the title from the heading"
+    $ getTitle [md|# I am a title!|]
+    `shouldBe` Just "I am a title!"
+  it "it fails to get the title if there isn't a h1"
+    $ getTitle [md|There is no title here|]
+    `shouldBe` Nothing
+  it "takes the first h1 even if there is stuff before it"
+    $ getTitle
       [md|
         foo bar
 
@@ -231,9 +242,9 @@ spec_getTitle = do
 
         # A title
       |]
-      `shouldBe` Just "A title"
-  it "doesn't get confused by several instances of h1" $
-    getTitle
+    `shouldBe` Just "A title"
+  it "doesn't get confused by several instances of h1"
+    $ getTitle
       [md|
         # A title
 
@@ -241,8 +252,9 @@ spec_getTitle = do
 
         # A third heading
       |]
-      `shouldBe` Just "A title"
-  it "ignores comments" $
+    `shouldBe` Just "A title"
+  it "ignores comments"
+    $
     -- this behavior is important for properly handling titles that themselves
     -- this behavior is important for properly handling titles that themselves
     -- have a link to another note in them besides generally being sensible
@@ -258,4 +270,4 @@ spec_getTitle = do
         # A title with<!--a comment--> in it
         Body content
       |]
-      `shouldBe` Just "A title with in it"
+    `shouldBe` Just "A title with in it"

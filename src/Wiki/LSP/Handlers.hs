@@ -23,11 +23,11 @@ import Wiki.Slug qualified as Slug
 type MonadTResponseError method m = MonadError (TResponseError method) m
 
 initialized ::
-  MonadLsp Config m => TNotificationMessage 'Method_Initialized -> m ()
+  (MonadLsp Config m) => TNotificationMessage 'Method_Initialized -> m ()
 initialized _n = pure ()
 
 textDocumentDidOpen ::
-  MonadLsp Config m => TNotificationMessage 'Method_TextDocumentDidOpen -> m ()
+  (MonadLsp Config m) => TNotificationMessage 'Method_TextDocumentDidOpen -> m ()
 textDocumentDidOpen notification = do
   let doc = notification ^. J.params . J.textDocument
       nuri = doc ^. J.uri . to toNormalizedUri
@@ -43,7 +43,7 @@ textDocumentDidOpen notification = do
         [mkDiagnostic GeneralInfo (atLineCol 0 0) "didOpen: Parsed successfully!"]
 
 textDocumentDidChange ::
-  MonadLsp Config m => TNotificationMessage 'Method_TextDocumentDidChange -> m ()
+  (MonadLsp Config m) => TNotificationMessage 'Method_TextDocumentDidChange -> m ()
 textDocumentDidChange notification = runEarlyReturnT $ do
   (nuri, version, mcontents) <- tryGetContents notification
   contents <- onNothing mcontents $ returnEarly ()
@@ -68,9 +68,9 @@ tryGetContents message = do
   let nuri =
         message
           ^. J.params
-            . J.textDocument
-            . J.uri
-            . to toNormalizedUri
+          . J.textDocument
+          . J.uri
+          . to toNormalizedUri
   getVirtualFile nuri <&> \case
     Nothing -> (nuri, Nothing, Nothing)
     Just vf -> (nuri, Just (virtualFileVersion vf), Just (virtualFileText vf))
@@ -80,17 +80,17 @@ parseDocument nuri =
   Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri)
 
 parseDocumentThrow ::
-  MonadTResponseError method m => NormalizedUri -> Text -> m Pandoc
+  (MonadTResponseError method m) => NormalizedUri -> Text -> m Pandoc
 parseDocumentThrow nuri contents =
   onLeft (parseDocument nuri contents) (const throwDocumentStateDoesNotParse)
 
 type Response (m :: Method 'ClientToServer 'Request) =
   Either (TResponseError m) (MessageResult m)
 
-throwNoContentsAvailable :: MonadTResponseError method m => m a
+throwNoContentsAvailable :: (MonadTResponseError method m) => m a
 throwNoContentsAvailable =
-  throwError $
-    TResponseError
+  throwError
+    $ TResponseError
       { _code = InL LSPErrorCodes_RequestFailed,
         _message = "Failed to retrieve text from requested document.",
         _xdata = Nothing
@@ -101,10 +101,10 @@ throwNoContentsAvailable =
 -- We will update the diagnostics on the didChange request if we didn't already
 -- so it isn't necessary to report the parse failure at use sites of this
 -- function.
-throwDocumentStateDoesNotParse :: MonadError (TResponseError method) m => m a
+throwDocumentStateDoesNotParse :: (MonadError (TResponseError method) m) => m a
 throwDocumentStateDoesNotParse =
-  throwError $
-    TResponseError
+  throwError
+    $ TResponseError
       { _code = InL LSPErrorCodes_RequestFailed,
         _message = "Current document state doesn't parse",
         _xdata = Nothing
@@ -116,8 +116,8 @@ rethrowIOException ::
   m a
 rethrowIOException action =
   action `catch` \(ioe :: IOError) ->
-    throwError $
-      TResponseError
+    throwError
+      $ TResponseError
         { _code = InR ErrorCodes_InternalError,
           _message =
             "Encountered unrecoverable IO error during request: "
@@ -126,7 +126,7 @@ rethrowIOException action =
         }
 
 textDocumentDefinition ::
-  MonadLsp Config m =>
+  (MonadLsp Config m) =>
   TRequestMessage 'Method_TextDocumentDefinition ->
   m (Response 'Method_TextDocumentDefinition)
 textDocumentDefinition request = runExceptT $ do
@@ -154,8 +154,10 @@ pageForSlug slug = do
   m_vf <- getVirtualFile path
   contents <- case m_vf of
     Nothing ->
-      rethrowIOException . liftIO . Text.readFile $
-        Slug.intoFilePathRelativeToDir currentDirectory slug
+      rethrowIOException
+        . liftIO
+        . Text.readFile
+        $ Slug.intoFilePathRelativeToDir currentDirectory slug
     Just vf -> pure $ virtualFileText vf
   parseDocumentThrow path contents
 
@@ -166,7 +168,7 @@ titleForSlug ::
 titleForSlug slug = Page.getTitle <$> pageForSlug slug
 
 textDocumentFormatting ::
-  MonadLsp Config m =>
+  (MonadLsp Config m) =>
   TRequestMessage 'Method_TextDocumentFormatting ->
   m (Response 'Method_TextDocumentFormatting)
 textDocumentFormatting request = runExceptionErrorT $ do
@@ -180,14 +182,14 @@ textDocumentFormatting request = runExceptionErrorT $ do
 -- generally wants to use it
 requestHandler' ::
   forall (m :: Method 'ClientToServer 'Request) f.
-  Monad f =>
+  (Monad f) =>
   SMethod m ->
   (TRequestMessage m -> f (Either (TResponseError m) (MessageResult m))) ->
   Handlers f
 requestHandler' s handler = requestHandler s \request responder -> do
   handler request >>= responder
 
-handlers :: MonadLsp Config m => Handlers m
+handlers :: (MonadLsp Config m) => Handlers m
 handlers =
   mconcat
     [ notificationHandler SMethod_Initialized initialized,

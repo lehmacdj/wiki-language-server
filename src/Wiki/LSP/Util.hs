@@ -7,7 +7,7 @@ import MyPrelude
 import Wiki.LSP.Config
 
 sendDiagnostics ::
-  MonadLsp Config m => NormalizedUri -> Maybe Int32 -> [Diagnostic] -> m ()
+  (MonadLsp Config m) => NormalizedUri -> Maybe Int32 -> [Diagnostic] -> m ()
 sendDiagnostics uri version diagnostics = do
   Config {maxDiagnostics} <- getConfig
   publishDiagnostics maxDiagnostics uri version (partitionBySource diagnostics)

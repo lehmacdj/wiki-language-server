@@ -109,7 +109,7 @@ import Prelude as X (showChar, showParen, showString, shows)
 -- | Throw an error in place of Nothing. So named because generally the
 -- exception will describe the error that took place causing a result of
 -- Nothing embedding it in a larger class of possible exceptions.
-note :: MonadError e m => e -> Maybe a -> m a
+note :: (MonadError e m) => e -> Maybe a -> m a
 note = noteM . pure
 
 -- | Like noteM, but allows running monadic effects while generating the
@@ -120,21 +120,21 @@ note = noteM . pure
 -- Also consider using @onNothing@ instead which can be more idomatic when the
 -- thing that is maybe is short and you want to have an anonymous error
 -- handling block.
-noteM :: MonadError e m => m e -> Maybe a -> m a
+noteM :: (MonadError e m) => m e -> Maybe a -> m a
 noteM err = \case
   Nothing -> throwError =<< err
   Just x -> pure x
 
-onNothing :: Applicative m => Maybe a -> m a -> m a
+onNothing :: (Applicative m) => Maybe a -> m a -> m a
 onNothing = flip (`maybe` pure)
 
-onNothingM :: Monad m => m (Maybe a) -> m a -> m a
+onNothingM :: (Monad m) => m (Maybe a) -> m a -> m a
 onNothingM action err = action >>= \m -> onNothing m err
 
-onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
+onLeft :: (Applicative m) => Either e a -> (e -> m a) -> m a
 onLeft = flip (`either` pure)
 
-onRight :: Applicative m => Either a e -> (e -> m a) -> m a
+onRight :: (Applicative m) => Either a e -> (e -> m a) -> m a
 onRight = flip (either pure)
 
 codiagonal :: Either a a -> a
@@ -173,7 +173,7 @@ instance MonadTrans (EarlyReturnT r) where
 newtype EarlyReturn r = EarlyReturn r
   deriving anyclass (Exception)
 
-instance forall r. Typeable r => Show (EarlyReturn r) where
+instance forall r. (Typeable r) => Show (EarlyReturn r) where
   showsPrec p _ =
     showParen (p > 10) $
       showString "EarlyReturn "

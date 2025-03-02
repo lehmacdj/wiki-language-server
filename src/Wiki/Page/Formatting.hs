@@ -25,17 +25,17 @@ data FormattingOperation
   = -- | Represents an operation that converts a link like @[[random-id]]@ into
     -- a link like @<!--wls-->[[random-id|Note title]]@.
     WikilinkTransclusion
-      { -- | The slug of the note the title of which should be transcluded
-        slug :: Text,
-        -- | Range to replace with the link to the note
-        linkReplaceRange :: Range,
-        -- | Range to replace with a marker noting that this link is transcluded
-        -- We use the marker to allow us to update wikilinks that we transcluded
-        -- in the past. If there is a wikilink `[[slug|title]]` without the
-        -- maker we don't transclude it to allow the user to edit the title
-        -- manually when they want to.
-        markerReplaceRange :: Range
-      }
+    { -- | The slug of the note the title of which should be transcluded
+      slug :: Text,
+      -- | Range to replace with the link to the note
+      linkReplaceRange :: Range,
+      -- | Range to replace with a marker noting that this link is transcluded
+      -- We use the marker to allow us to update wikilinks that we transcluded
+      -- in the past. If there is a wikilink `[[slug|title]]` without the
+      -- maker we don't transclude it to allow the user to edit the title
+      -- manually when they want to.
+      markerReplaceRange :: Range
+    }
   deriving (Show, Eq, Ord)
 
 pattern WlsTranscludedMarker :: Text
@@ -69,11 +69,11 @@ editsForPage = query transcludeNoteTitles
       -- if the link has contents which are simply the slug we rewrite it
       PositionedLink lr@(Range _ markerPos) [Str contents] slug : rest
         | contents == slug ->
-          -- the new marker will be put just after the link. This needs to be
-          -- located 1 character past the last character that comprises the
-          -- link because otherwise it would disrupt the link syntax
-          let mr = Range markerPos markerPos
-           in WikilinkTransclusion slug lr mr : transcludeNoteTitles rest
+            -- the new marker will be put just after the link. This needs to be
+            -- located 1 character past the last character that comprises the
+            -- link because otherwise it would disrupt the link syntax
+            let mr = Range markerPos markerPos
+             in WikilinkTransclusion slug lr mr : transcludeNoteTitles rest
       -- otherwise there is nothing to do
       [] -> []
       _ : rest -> transcludeNoteTitles rest
@@ -133,7 +133,7 @@ spec_editsForPage = do
     [md|<!--wls-->[[asdf|Hello]]|]
 
 textEditOfOperation ::
-  Monad m =>
+  (Monad m) =>
   -- | function that gets the title to use for the slug, if it returns Nothing
   -- no edit is produced for the formatting operation
   (Text -> m (Maybe Text)) ->
@@ -157,16 +157,16 @@ spec_textEditOfOperation = do
           (Range (Position 0 0) (Position 0 14))
           (Range (Position 0 14) (Position 0 36))
   describe "WikilinkTransclusion" $ do
-    it "returns a text edit when title is findable" $
-      textEditOfOperation
+    it "returns a text edit when title is findable"
+      $ textEditOfOperation
         (const (pure (Just "Some Title")))
         wikilinkTransclusion
-        `shouldBe` Identity
-          [ TextEdit (Range (Position 0 0) (Position 0 14)) "[[asdf|Some Title]]",
-            TextEdit (Range (Position 0 14) (Position 0 36)) WlsTranscludedMarker
-          ]
-    it "doens't return anything when finding a title fails" $
-      textEditOfOperation
+      `shouldBe` Identity
+        [ TextEdit (Range (Position 0 0) (Position 0 14)) "[[asdf|Some Title]]",
+          TextEdit (Range (Position 0 14) (Position 0 36)) WlsTranscludedMarker
+        ]
+    it "doens't return anything when finding a title fails"
+      $ textEditOfOperation
         (const (pure Nothing))
         wikilinkTransclusion
-        `shouldBe` Identity []
+      `shouldBe` Identity []

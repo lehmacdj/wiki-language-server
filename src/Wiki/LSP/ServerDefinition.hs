@@ -28,8 +28,8 @@ serverOptions =
               _save = Nothing
             },
       optServerInfo =
-        Just $
-          ServerInfo "wiki-language-server" (Just $ tshow version)
+        Just
+          $ ServerInfo "wiki-language-server" (Just $ tshow version)
     }
 
 serverDefinition :: ServerDefinition Config

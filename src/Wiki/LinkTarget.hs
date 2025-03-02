@@ -22,10 +22,12 @@ data LinkTarget
   deriving (Show, Eq, Ord)
 
 -- | Interpret wikilinks as being relative to the working directory
-relativeToWorkingDirectory :: MonadIO m => LinkTarget -> m Uri
+relativeToWorkingDirectory :: (MonadIO m) => LinkTarget -> m Uri
 relativeToWorkingDirectory link =
-  liftIO $
-    relativeToDir <$> getCurrentDirectory <*> pure link
+  liftIO
+    $ relativeToDir
+    <$> getCurrentDirectory
+    <*> pure link
 
 -- | Given an absolute path to a directory interpret wiki links as being
 -- relative to that directory
