@@ -14,13 +14,13 @@ me focused on what I'm working on/thinking about right now):
 - autocomplete for note titles when starting a new link
 - autocomplete for tags (when editing in YAML frontmatter)
 - autocomplete for GitHub style id link targets (e.g. a heading titled "Wiki Language Server" turns into `#wiki-language-server`)
-- A Vim Plugin that offers
-  - telescope extension for searching notes / backlinks of notes.
-    - mostly implemented via commands in the language server
 
 Aspires to eventually support at least:
 - Vim Plugin Features:
+  - telescope extension for searching notes / backlinks of notes.
+    - mostly implemented via commands in the language server
   - like conceal bits of syntax that are unnecessary to see most of the time
+    - I've implemented concealment using ordinary syntax rules in my vim config; using LSP to handle what I want to do is slightly overkill short term
     - e.g. stuff to the left of the `|` in a `[[asdf|alt link text]]` link.
     - This can use [Semantic Tokens](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens)
       - use a custom `hidden` semantic token modifier that indicates that a symbol should be hidden
