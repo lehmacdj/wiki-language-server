@@ -94,6 +94,7 @@ library
       StandaloneDeriving
       StandaloneKindSignatures
       StrictData
+      TemplateHaskellQuotes
       TupleSections
       TypeApplications
       TypeFamilies
@@ -189,6 +190,7 @@ executable wiki-language-server
       StandaloneDeriving
       StandaloneKindSignatures
       StrictData
+      TemplateHaskellQuotes
       TupleSections
       TypeApplications
       TypeFamilies
@@ -286,6 +288,7 @@ test-suite wiki-language-server-test
       StandaloneDeriving
       StandaloneKindSignatures
       StrictData
+      TemplateHaskellQuotes
       TupleSections
       TypeApplications
       TypeFamilies

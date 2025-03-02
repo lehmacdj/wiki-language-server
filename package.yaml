@@ -105,6 +105,7 @@ default-extensions:
 - StandaloneDeriving
 - StandaloneKindSignatures
 - StrictData
+- TemplateHaskellQuotes
 - TupleSections
 - TypeApplications
 - TypeFamilies

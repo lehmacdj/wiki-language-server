@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Template Haskell for creating pages (Pandoc data structure) from in a
 -- QuasiQuotation
 module Wiki.Page.TH where

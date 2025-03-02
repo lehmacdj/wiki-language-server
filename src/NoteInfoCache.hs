@@ -1,6 +1,3 @@
-{-# LANGUAGE ImportQualifiedPost #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module NoteInfoCache where
 
 -- import Data.ByteString.Lazy qualified as BSL

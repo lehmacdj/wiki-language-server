@@ -29,7 +29,11 @@ data FormattingOperation
         slug :: Text,
         -- | Range to replace with the link to the note
         linkReplaceRange :: Range,
-        -- | Range to replace with a marker explaining that this link is transcluded
+        -- | Range to replace with a marker noting that this link is transcluded
+        -- We use the marker to allow us to update wikilinks that we transcluded
+        -- in the past. If there is a wikilink `[[slug|title]]` without the
+        -- maker we don't transclude it to allow the user to edit the title
+        -- manually when they want to.
         markerReplaceRange :: Range
       }
   deriving (Show, Eq, Ord)
