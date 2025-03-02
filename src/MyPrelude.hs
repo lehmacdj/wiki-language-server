@@ -8,7 +8,6 @@ module MyPrelude
     noteM,
     onNothing,
     onNothingM,
-    tryIOException,
     onLeft,
     onRight,
     foldMapA,
@@ -89,7 +88,8 @@ import Data.Either as X (fromLeft, fromRight)
 import Data.Generics.Labels ()
 import Data.List.NonEmpty as X (NonEmpty (..))
 import Data.Monoid (Alt (Alt, getAlt))
-import Data.Typeable (typeOf)
+import Data.Proxy as X (Proxy (..))
+import Data.Typeable (typeRep)
 import Data.Void as X (Void, absurd)
 import GHC.Stack as X (HasCallStack)
 import GHC.TypeLits as X
@@ -149,7 +149,7 @@ codiagonal = \case
 foldMapA :: (Alternative f, MonoFoldable t) => (Element t -> f b) -> t -> f b
 foldMapA f = getAlt . foldMap (Alt . f)
 
-newtype EarlyReturnT r m a = EarlyReturnT {unEarlyReturnT :: m a}
+newtype EarlyReturnT r m a = EarlyReturnT {underlying :: m a}
   -- TODO: theoretically it would be nice to add all of the things here,
   -- but there are so many, and in 99.9% of cases this is probably good enough
   -- and we can add more incrementally as needed
@@ -177,19 +177,19 @@ instance forall r. Typeable r => Show (EarlyReturn r) where
   showsPrec p _ =
     showParen (p > 10) $
       showString "EarlyReturn "
-        . shows (typeOf (error "unused arg to typeOf" :: EarlyReturn r))
+        . shows (typeRep (Proxy @(EarlyReturn r)))
 
 returnEarly :: (MonadIO m, Typeable r) => r -> EarlyReturnT r m a
 returnEarly = throwIO . EarlyReturn
 
 runEarlyReturnT :: (MonadUnliftIO m, Typeable r) => EarlyReturnT r m r -> m r
 runEarlyReturnT action =
-  unEarlyReturnT $
+  (.underlying) $
     action `catch` \(EarlyReturn r) -> pure r
 
 -- | Like ExceptT but the underlying exception throws and catches exceptions in
 -- the IO monad. This allows giving this type an MonadUnliftIO instance.
-newtype ExceptionErrorT e m a = ExceptionErrorT {unExceptionErrorT :: m a}
+newtype ExceptionErrorT e m a = ExceptionErrorT {underlying :: m a}
   -- TODO: theoretically it would be nice to add all of the things here,
   -- but there are so many, and in 99.9% of cases this is probably good enough
   -- and we can add more incrementally as needed
@@ -210,11 +210,11 @@ instance (MonadUnliftIO m, Exception e) => MonadError e (ExceptionErrorT e m) wh
   throwError e = liftIO $ throwIO e
   catchError (ExceptionErrorT action) continuation =
     ExceptionErrorT $
-      action `catch` (unExceptionErrorT . continuation)
+      action `catch` ((.underlying) . continuation)
 
 runExceptionErrorT ::
   (MonadUnliftIO m, Exception e) => ExceptionErrorT e m a -> m (Either e a)
-runExceptionErrorT = try . unExceptionErrorT
+runExceptionErrorT = try . (.underlying)
 
 -- |
 --

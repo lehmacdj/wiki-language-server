@@ -45,7 +45,6 @@ library
       Wiki.LSP.Util
       Wiki.Page.Formatting
       Wiki.Page.GotoDefinition
-      Wiki.Page.IO
       Wiki.Page.Parser
       Wiki.Page.TH
       Wiki.Page.Utils
@@ -56,36 +55,50 @@ library
   hs-source-dirs:
       src
   default-extensions:
+      BangPatterns
       BlockArguments
+      CApiFFI
       ConstraintKinds
       DataKinds
+      DefaultSignatures
       DeriveAnyClass
+      DeriveFoldable
       DeriveFunctor
       DeriveGeneric
       DeriveTraversable
-      DeriveFoldable
       DerivingStrategies
+      DerivingVia
+      DisambiguateRecordFields
       DuplicateRecordFields
       FlexibleContexts
       FlexibleInstances
+      FunctionalDependencies
       GADTs
       GeneralizedNewtypeDeriving
       ImportQualifiedPost
       LambdaCase
       MultiParamTypeClasses
       NamedFieldPuns
+      NoFieldSelectors
       NoImplicitPrelude
       OverloadedLabels
+      OverloadedRecordDot
       OverloadedStrings
+      PatternSynonyms
       PolyKinds
       QuantifiedConstraints
+      QuasiQuotes
       RankNTypes
+      RecordWildCards
       ScopedTypeVariables
       StandaloneDeriving
+      StandaloneKindSignatures
+      StrictData
       TupleSections
       TypeApplications
       TypeFamilies
       TypeOperators
+      TypeSynonymInstances
       ViewPatterns
   ghc-options: -Wall -Wno-name-shadowing
   build-depends:
@@ -137,36 +150,50 @@ executable wiki-language-server
   hs-source-dirs:
       app
   default-extensions:
+      BangPatterns
       BlockArguments
+      CApiFFI
       ConstraintKinds
       DataKinds
+      DefaultSignatures
       DeriveAnyClass
+      DeriveFoldable
       DeriveFunctor
       DeriveGeneric
       DeriveTraversable
-      DeriveFoldable
       DerivingStrategies
+      DerivingVia
+      DisambiguateRecordFields
       DuplicateRecordFields
       FlexibleContexts
       FlexibleInstances
+      FunctionalDependencies
       GADTs
       GeneralizedNewtypeDeriving
       ImportQualifiedPost
       LambdaCase
       MultiParamTypeClasses
       NamedFieldPuns
+      NoFieldSelectors
       NoImplicitPrelude
       OverloadedLabels
+      OverloadedRecordDot
       OverloadedStrings
+      PatternSynonyms
       PolyKinds
       QuantifiedConstraints
+      QuasiQuotes
       RankNTypes
+      RecordWildCards
       ScopedTypeVariables
       StandaloneDeriving
+      StandaloneKindSignatures
+      StrictData
       TupleSections
       TypeApplications
       TypeFamilies
       TypeOperators
+      TypeSynonymInstances
       ViewPatterns
   ghc-options: -Wall -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N
   build-depends:
@@ -220,36 +247,50 @@ test-suite wiki-language-server-test
   hs-source-dirs:
       test
   default-extensions:
+      BangPatterns
       BlockArguments
+      CApiFFI
       ConstraintKinds
       DataKinds
+      DefaultSignatures
       DeriveAnyClass
+      DeriveFoldable
       DeriveFunctor
       DeriveGeneric
       DeriveTraversable
-      DeriveFoldable
       DerivingStrategies
+      DerivingVia
+      DisambiguateRecordFields
       DuplicateRecordFields
       FlexibleContexts
       FlexibleInstances
+      FunctionalDependencies
       GADTs
       GeneralizedNewtypeDeriving
       ImportQualifiedPost
       LambdaCase
       MultiParamTypeClasses
       NamedFieldPuns
+      NoFieldSelectors
       NoImplicitPrelude
       OverloadedLabels
+      OverloadedRecordDot
       OverloadedStrings
+      PatternSynonyms
       PolyKinds
       QuantifiedConstraints
+      QuasiQuotes
       RankNTypes
+      RecordWildCards
       ScopedTypeVariables
       StandaloneDeriving
+      StandaloneKindSignatures
+      StrictData
       TupleSections
       TypeApplications
       TypeFamilies
       TypeOperators
+      TypeSynonymInstances
       ViewPatterns
   ghc-options: -Wall -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N
   build-depends:

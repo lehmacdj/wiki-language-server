@@ -1,6 +1,6 @@
 module Wiki.Slug where
 
-import Language.LSP.Types (NormalizedUri, toNormalizedUri)
+import Language.LSP.Protocol.Types (NormalizedUri, toNormalizedUri)
 import MyPrelude
 import Wiki.Diagnostics (Uri (Uri))
 

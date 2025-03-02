@@ -3,6 +3,8 @@ module Wiki.LSP.Config where
 import Data.Aeson
 import MyPrelude
 
+-- | This is a config value that can be passed to the server from the client on
+-- initialization.
 newtype Config = Config
   { maxDiagnostics :: Int
   }
@@ -16,7 +18,7 @@ instance Default Config where
       }
 
 -- TODO: does this need patch like semantics
-onConfigChange :: Config -> Value -> Either Text Config
-onConfigChange _old v = case fromJSON v of
+parseConfig :: Config -> Value -> Either Text Config
+parseConfig _old v = case fromJSON v of
   Error e -> Left $ pack e
   Success new -> Right new

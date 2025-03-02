@@ -4,31 +4,29 @@ module Wiki.Diagnostics
     onLine,
     atLineCol,
 
-    -- * Re-exports from Language.LSP.Types
+    -- * Re-exports from Language.LSP.Protocol.Types
     module X,
   )
 where
 
-import Language.LSP.Types as X
+import Language.LSP.Protocol.Lens as X
+  ( HasLocation (..),
+    HasMessage (..),
+    HasRange (..),
+    HasRelatedInformation (..),
+    HasUri (..),
+  )
+import Language.LSP.Protocol.Types as X
   ( Diagnostic (..),
     DiagnosticRelatedInformation (..),
     DiagnosticSeverity (..),
-    DiagnosticSource,
     DiagnosticTag (..),
-    List (..),
     Location (..),
     Position (..),
     Range (..),
     UInt,
     Uri (..),
     type (|?) (..),
-  )
-import Language.LSP.Types.Lens as X
-  ( HasLocation (..),
-    HasMessage (..),
-    HasRange (..),
-    HasRelatedInformation (..),
-    HasUri (..),
   )
 import MyPrelude
 import Prettyprinter
@@ -40,8 +38,8 @@ data DiagnosticKind
   | ParseError
   | GeneralInfo
 
-kindSourceName :: DiagnosticKind -> DiagnosticSource
-kindSourceName = const "Wiki Language Server"
+kindSourceName :: DiagnosticKind -> Text
+kindSourceName = const "wiki-language-server"
 
 wlsCode :: Int -> Text
 wlsCode = ("WLS" <>) . tshow
@@ -54,15 +52,15 @@ kindCode = \case
 
 kindSeverity :: DiagnosticKind -> DiagnosticSeverity
 kindSeverity = \case
-  Bug -> DsError
-  ParseError -> DsError
-  GeneralInfo -> DsInfo
+  Bug -> DiagnosticSeverity_Error
+  ParseError -> DiagnosticSeverity_Error
+  GeneralInfo -> DiagnosticSeverity_Information
 
-kindTags :: DiagnosticKind -> [DiagnosticTag]
+kindTags :: DiagnosticKind -> Maybe [DiagnosticTag]
 kindTags = \case
-  Bug -> []
-  ParseError -> []
-  GeneralInfo -> []
+  Bug -> Nothing
+  ParseError -> Nothing
+  GeneralInfo -> Nothing
 
 onLine :: Int -> Range
 onLine (fromIntegral -> line) = Range (Position line 0) (Position (line + 1) 0)
@@ -86,8 +84,10 @@ mkDiagnostic k r m =
     { _range = r,
       _severity = Just $ kindSeverity k,
       _code = Just . InR $ kindCode k,
+      _codeDescription = Nothing, -- add a URI to a wiki describing errors
       _source = Just $ kindSourceName k,
       _message = renderStrict . layoutLspDiagnostic $ m,
-      _tags = Just . List $ kindTags k,
-      _relatedInformation = Nothing
+      _tags = kindTags k,
+      _relatedInformation = Nothing,
+      _data_ = Nothing
     }

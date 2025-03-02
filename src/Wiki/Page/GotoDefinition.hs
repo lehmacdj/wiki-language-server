@@ -5,7 +5,7 @@ module Wiki.Page.GotoDefinition where
 import Data.Data.Lens (template)
 import Data.Sequence (Seq (Empty, (:<|)))
 import Data.Sequence.Lens (seqOf)
-import Language.LSP.Types (Position (Position), Uri (Uri))
+import Language.LSP.Protocol.Types (Position (Position), Uri (Uri))
 import MyPrelude
 import TestPrelude
 import Text.Pandoc.Definition (Block, Inline (Link), Pandoc (..))

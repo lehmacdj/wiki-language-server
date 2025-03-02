@@ -1,7 +1,7 @@
 module Wiki.LSP.ServerDefinition (serverDefinition) where
 
+import Language.LSP.Protocol.Types
 import Language.LSP.Server
-import Language.LSP.Types
 import MyPrelude
 import Paths_wiki_language_server (version)
 import Wiki.LSP.Config
@@ -18,16 +18,16 @@ interpretHandlerM env = Iso (runHandlerM env) liftIO
 serverOptions :: Options
 serverOptions =
   def
-    { textDocumentSync =
+    { optTextDocumentSync =
         Just
           TextDocumentSyncOptions
             { _openClose = Just True,
-              _change = Just TdSyncIncremental,
+              _change = Just TextDocumentSyncKind_Incremental,
               _willSave = Nothing,
               _willSaveWaitUntil = Nothing,
               _save = Nothing
             },
-      serverInfo =
+      optServerInfo =
         Just $
           ServerInfo "wiki-language-server" (Just $ tshow version)
     }
@@ -36,9 +36,11 @@ serverDefinition :: ServerDefinition Config
 serverDefinition =
   ServerDefinition
     { defaultConfig = def,
-      onConfigurationChange = onConfigChange,
+      configSection = "wiki-language-server",
+      parseConfig = Wiki.LSP.Config.parseConfig,
+      onConfigChange = const $ pure (),
       doInitialize = \env _ -> pure (Right env),
-      staticHandlers = handlers,
+      staticHandlers = const handlers,
       interpretHandler = interpretHandlerM,
       options = serverOptions
     }

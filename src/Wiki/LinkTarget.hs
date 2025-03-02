@@ -2,7 +2,7 @@
 -- into 'FilePath' based on environmental information.
 module Wiki.LinkTarget where
 
-import Language.LSP.Types (Uri (Uri))
+import Language.LSP.Protocol.Types (Uri (Uri))
 import MyPrelude
 import System.Directory
 import Wiki.Slug qualified as Slug

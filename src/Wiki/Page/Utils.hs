@@ -16,7 +16,7 @@ module Wiki.Page.Utils
 where
 
 import Commonmark.Types (SourcePos, SourceRange (..))
-import Language.LSP.Types hiding (Empty)
+import Language.LSP.Protocol.Types (Position (Position), Range (Range))
 import MyPrelude
 import TestPrelude
 import Text.Megaparsec qualified as P
@@ -34,21 +34,21 @@ attrB :: Traversal' Block Attr
 attrB f = \case
   -- note: we're intentionally not matching with {} here because we would want
   -- breakage if a new field is introduced because it could be a new Attr field
-  p@(Plain _) -> pure p
-  p@(Para _) -> pure p
-  lb@(LineBlock _) -> pure lb
+  p@Plain {} -> pure p
+  p@Para {} -> pure p
+  lb@LineBlock {} -> pure lb
   CodeBlock attr t -> CodeBlock <$> f attr <*> pure t
-  rb@(RawBlock _ _) -> pure rb
-  bq@(BlockQuote _) -> pure bq
-  ol@(OrderedList _ _) -> pure ol
-  bl@(BulletList _) -> pure bl
-  dl@(DefinitionList _) -> pure dl
+  rb@RawBlock {} -> pure rb
+  bq@BlockQuote {} -> pure bq
+  ol@OrderedList {} -> pure ol
+  bl@BulletList {} -> pure bl
+  bl@Figure {} -> pure bl
+  dl@DefinitionList {} -> pure dl
   Header l attr b -> Header l <$> f attr <*> pure b
   HorizontalRule -> pure HorizontalRule
   Table attr c cs th tb tf ->
     Table <$> f attr <*> pure c <*> pure cs <*> pure th <*> pure tb <*> pure tf
   Div attr b -> Div <$> f attr <*> pure b
-  Null -> pure Null
 
 -- | Affine traversal returning the attribute if this element has one, and
 -- nothing otherwise
@@ -244,6 +244,13 @@ spec_getTitle = do
       `shouldBe` Just "A title"
   it "ignores comments" $
     -- this behavior is important for properly handling titles that themselves
+    -- this behavior is important for properly handling titles that themselves
+    -- have a link to another note in them besides generally being sensible
+    -- have a link to another note in them besides generally being sensible
+    -- behavior
+    -- behavior
+
+    -- this behavior is important for properly handling titles that themselves
     -- have a link to another note in them besides generally being sensible
     -- behavior
     getTitle
@@ -251,4 +258,4 @@ spec_getTitle = do
         # A title with<!--a comment--> in it
         Body content
       |]
-    `shouldBe` Just "A title with in it"
+      `shouldBe` Just "A title with in it"

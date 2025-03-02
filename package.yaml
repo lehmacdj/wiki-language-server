@@ -66,36 +66,50 @@ dependencies:
 - tasty-quickcheck
 
 default-extensions:
+- BangPatterns
 - BlockArguments
+- CApiFFI
 - ConstraintKinds
 - DataKinds
+- DefaultSignatures
 - DeriveAnyClass
+- DeriveFoldable
 - DeriveFunctor
 - DeriveGeneric
 - DeriveTraversable
-- DeriveFoldable
 - DerivingStrategies
+- DerivingVia
+- DisambiguateRecordFields
 - DuplicateRecordFields
 - FlexibleContexts
 - FlexibleInstances
+- FunctionalDependencies
 - GADTs
 - GeneralizedNewtypeDeriving
 - ImportQualifiedPost
 - LambdaCase
 - MultiParamTypeClasses
 - NamedFieldPuns
+- NoFieldSelectors
 - NoImplicitPrelude
 - OverloadedLabels
+- OverloadedRecordDot
 - OverloadedStrings
+- PatternSynonyms
 - PolyKinds
 - QuantifiedConstraints
+- QuasiQuotes
 - RankNTypes
+- RecordWildCards
 - ScopedTypeVariables
 - StandaloneDeriving
+- StandaloneKindSignatures
+- StrictData
 - TupleSections
 - TypeApplications
 - TypeFamilies
 - TypeOperators
+- TypeSynonymInstances
 - ViewPatterns
 
 library:

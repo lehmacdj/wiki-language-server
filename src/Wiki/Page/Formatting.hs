@@ -13,7 +13,7 @@ module Wiki.Page.Formatting
   )
 where
 
-import Language.LSP.Types
+import Language.LSP.Protocol.Types
 import MyPrelude
 import TestPrelude
 import Text.Pandoc.Definition
@@ -32,9 +32,6 @@ data FormattingOperation
         -- | Range to replace with a marker explaining that this link is transcluded
         markerReplaceRange :: Range
       }
-  | -- | see tweag/ormolu#882, should be able to remove this soonish (or
-    -- obviously if I add another constructor.
-    OrmoluWorkaroundConstructor Void
   deriving (Show, Eq, Ord)
 
 pattern WlsTranscludedMarker :: Text
