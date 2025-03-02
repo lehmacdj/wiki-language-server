@@ -147,7 +147,6 @@ textEditOfOperation resolveSlugTitle = \case
         [ TextEdit lr $ "[[" <> slug <> "|" <> title <> "]]",
           TextEdit mr WlsTranscludedMarker
         ]
-  OrmoluWorkaroundConstructor v -> absurd v
 
 spec_textEditOfOperation :: Spec
 spec_textEditOfOperation = do

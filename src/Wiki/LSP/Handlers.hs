@@ -44,7 +44,7 @@ textDocumentDidOpen notification = do
 
 textDocumentDidChange ::
   (MonadLsp Config m) => TNotificationMessage 'Method_TextDocumentDidChange -> m ()
-textDocumentDidChange notification = runEarlyReturnT $ do
+textDocumentDidChange notification = withEarlyReturn $ do
   (nuri, version, mcontents) <- tryGetContents notification
   contents <- onNothing mcontents $ returnEarly ()
   case parseDocument nuri contents of

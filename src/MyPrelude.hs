@@ -16,7 +16,7 @@ module MyPrelude
     -- * EarlyReturnT and pals
     EarlyReturnT,
     returnEarly,
-    runEarlyReturnT,
+    withEarlyReturn,
 
     -- * ExceptionErrorT
     ExceptionErrorT,
@@ -179,11 +179,14 @@ instance forall r. (Typeable r) => Show (EarlyReturn r) where
       showString "EarlyReturn "
         . shows (typeRep (Proxy @(EarlyReturn r)))
 
-returnEarly :: (MonadIO m, Typeable r) => r -> EarlyReturnT r m a
-returnEarly = throwIO . EarlyReturn
+class MonadEarlyReturn r m where
+  returnEarly :: r -> m a
 
-runEarlyReturnT :: (MonadUnliftIO m, Typeable r) => EarlyReturnT r m r -> m r
-runEarlyReturnT action =
+instance (Typeable r, MonadIO m) => MonadEarlyReturn r (EarlyReturnT r m) where
+  returnEarly = throwIO . EarlyReturn
+
+withEarlyReturn :: (MonadUnliftIO m, Typeable r) => EarlyReturnT r m r -> m r
+withEarlyReturn action =
   (.underlying) $
     action `catch` \(EarlyReturn r) -> pure r
 
