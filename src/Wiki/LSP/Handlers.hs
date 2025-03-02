@@ -1,7 +1,6 @@
 -- | Handlers for the LSP client methods.
 module Wiki.LSP.Handlers (handlers) where
 
-import Data.Text.IO qualified as Text
 import Language.LSP.Protocol.Lens as J hiding (to)
 import Language.LSP.Protocol.Message
 import Language.LSP.Protocol.Types
@@ -12,6 +11,7 @@ import System.Directory (getCurrentDirectory)
 import Text.Pandoc.Definition (Pandoc)
 import Wiki.Diagnostics
 import Wiki.LSP.Config
+import Wiki.LSP.Logging
 import Wiki.LSP.Util
 import Wiki.LinkTarget
 import Wiki.Page.Formatting qualified as Formatting
@@ -102,19 +102,23 @@ parseDocument nuri =
   Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri)
 
 parseDocumentThrow ::
-  (MonadTResponseError method m) => NormalizedUri -> Text -> m Pandoc
+  (MonadTResponseError method m, MonadLsp c m) =>
+  NormalizedUri -> Text -> m Pandoc
 parseDocumentThrow nuri contents =
   onLeft (parseDocument nuri contents) (const throwDocumentStateDoesNotParse)
 
 type Response (m :: Method 'ClientToServer 'Request) =
   Either (TResponseError m) (MessageResult m)
 
-throwNoContentsAvailable :: (MonadTResponseError method m) => m a
-throwNoContentsAvailable =
+throwNoContentsAvailable ::
+  (MonadLsp c m, MonadTResponseError method m) => m a
+throwNoContentsAvailable = do
+  let msg = "Failed to retrieve text from requested document."
+  logError msg
   throwError
     $ TResponseError
       { _code = InL LSPErrorCodes_RequestFailed,
-        _message = "Failed to retrieve text from requested document.",
+        _message = msg,
         _xdata = Nothing
       }
 
@@ -123,27 +127,30 @@ throwNoContentsAvailable =
 -- We will update the diagnostics on the didChange request if we didn't already
 -- so it isn't necessary to report the parse failure at use sites of this
 -- function.
-throwDocumentStateDoesNotParse :: (MonadError (TResponseError method) m) => m a
-throwDocumentStateDoesNotParse =
+throwDocumentStateDoesNotParse ::
+  (MonadLsp c m, MonadError (TResponseError method) m) => m a
+throwDocumentStateDoesNotParse = do
+  let msg = "Current document state doesn't parse"
+  logError msg
   throwError
     $ TResponseError
       { _code = InL LSPErrorCodes_RequestFailed,
-        _message = "Current document state doesn't parse",
+        _message = msg,
         _xdata = Nothing
       }
 
-rethrowIOException ::
-  (MonadUnliftIO m, MonadError (TResponseError method) m) =>
+_rethrowIOException ::
+  (MonadUnliftIO m, MonadError (TResponseError method) m, MonadLsp c m) =>
   m a ->
   m a
-rethrowIOException action =
-  action `catch` \(ioe :: IOError) ->
+_rethrowIOException action =
+  action `catch` \(ioe :: IOError) -> do
+    let msg = "Encountered unrecoverable IO error during request: " <> tshow ioe
+    logError msg
     throwError
       $ TResponseError
         { _code = InR ErrorCodes_InternalError,
-          _message =
-            "Encountered unrecoverable IO error during request: "
-              <> tshow ioe,
+          _message = msg,
           _xdata = Nothing
         }
 
@@ -181,25 +188,22 @@ textDocumentDefinition request = runExceptionErrorT . withEarlyReturn $ do
   pure $ targetLocation (rangeFromPosition pos)
 
 pageForSlug ::
-  (MonadLsp Config m, MonadTResponseError method m) => Text -> m Pandoc
-pageForSlug slug = do
+  (MonadLsp Config m, MonadTResponseError method m) => Text -> m (Maybe Pandoc)
+pageForSlug slug = withEarlyReturn do
   currentDirectory <- liftIO getCurrentDirectory
-  let path = Slug.intoNormalizedUri currentDirectory slug
-  m_vf <- getVirtualFile path
-  contents <- case m_vf of
-    Nothing ->
-      rethrowIOException
-        . liftIO
-        . Text.readFile
-        $ Slug.intoFilePathRelativeToDir currentDirectory slug
-    Just vf -> pure $ virtualFileText vf
-  parseDocumentThrow path contents
+  let uri = Slug.intoUri currentDirectory slug
+  (nuri, _, mContents) <- tryGetUriContents uri
+  contents <- onNothing mContents . returnEarly $ Nothing @Pandoc
+  pure . justFromRight $ parseDocument nuri contents
 
 -- | Get the title for a slug returning Nothing if the file isn't found or we
 -- can't find the title in the page
 titleForSlug ::
   (MonadLsp Config m, MonadTResponseError method m) => Text -> m (Maybe Text)
-titleForSlug slug = Page.getTitle <$> pageForSlug slug
+titleForSlug slug = withEarlyReturn do
+  mPage <- pageForSlug slug
+  page <- onNothing mPage . returnEarly $ Nothing @Text
+  pure $ Page.getTitle page
 
 textDocumentFormatting ::
   (MonadLsp Config m) =>
@@ -210,7 +214,8 @@ textDocumentFormatting request = runExceptionErrorT $ do
   (_, contents) <- onNothing mVersionContents throwNoContentsAvailable
   parsed <- parseDocumentThrow nuri contents
   let edits = Formatting.editsForPage parsed
-  InL . concat <$> traverse (Formatting.textEditOfOperation titleForSlug) edits
+  resolvedEdits <- traverse (Formatting.textEditOfOperation titleForSlug) edits
+  pure . InL $ concat resolvedEdits
 
 -- | Shim for making requestHandler easier to use in the simple way that one
 -- generally wants to use it

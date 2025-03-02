@@ -45,6 +45,7 @@ library
       Wiki.LSP.Config
       Wiki.LSP.Handlers
       Wiki.LSP.Handlers.TH
+      Wiki.LSP.Logging
       Wiki.LSP.ServerDefinition
       Wiki.LSP.Util
       Wiki.Page.Formatting
@@ -111,6 +112,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , classy-prelude
+    , co-log-core
     , commonmark
     , commonmark-extensions
     , commonmark-pandoc
@@ -207,6 +209,7 @@ executable wiki-language-server
     , base >=4.7 && <5
     , bytestring
     , classy-prelude
+    , co-log-core
     , commonmark
     , commonmark-extensions
     , commonmark-pandoc
@@ -305,6 +308,7 @@ test-suite wiki-language-server-test
     , base >=4.7 && <5
     , bytestring
     , classy-prelude
+    , co-log-core
     , commonmark
     , commonmark-extensions
     , commonmark-pandoc

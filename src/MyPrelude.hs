@@ -12,6 +12,8 @@ module MyPrelude
     onLeft_,
     onRight,
     onRight_,
+    justFromLeft,
+    justFromRight,
     foldMapA,
 
     -- * Various other things; re-exported
@@ -131,6 +133,12 @@ codiagonal :: Either a a -> a
 codiagonal = \case
   Left a -> a
   Right a -> a
+
+justFromRight :: Either a b -> Maybe b
+justFromRight = either (const Nothing) Just
+
+justFromLeft :: Either a b -> Maybe a
+justFromLeft = either Just (const Nothing)
 
 -- | Branch over a 'Foldable' collection of values using the supplied
 --   action.
