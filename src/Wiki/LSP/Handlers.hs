@@ -36,11 +36,7 @@ textDocumentDidOpen notification = do
   case Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri) contents of
     Left d ->
       sendDiagnostics nuri version [d]
-    Right _ ->
-      sendDiagnostics
-        nuri
-        version
-        [mkDiagnostic GeneralInfo (atLineCol 0 0) "didOpen: Parsed successfully!"]
+    Right _ -> pure ()
 
 textDocumentDidChange ::
   (MonadLsp Config m) => TNotificationMessage 'Method_TextDocumentDidChange -> m ()
