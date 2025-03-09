@@ -3,7 +3,7 @@
 
 -- | Orphan instances to make Pandoc an instance of Lift so that it may be used
 -- in template haskell code
-module Orphans.PandocLift where
+module MyPrelude.Orphans.PandocLift where
 
 import Instances.TH.Lift ()
 import Language.Haskell.TH.Syntax (Lift)

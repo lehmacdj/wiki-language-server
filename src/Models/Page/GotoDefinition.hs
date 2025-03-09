@@ -1,18 +1,17 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Wiki.Page.GotoDefinition where
+module Models.Page.GotoDefinition where
 
 import Data.Data.Lens (template)
 import Data.Sequence (Seq (Empty, (:<|)))
 import Data.Sequence.Lens (seqOf)
 import Language.LSP.Protocol.Types (Position (Position), Uri (Uri))
+import Models.LinkTarget (LinkTarget (OtherUri, Wikilink))
+import Models.Page.TH (md)
+import Models.Page.Utils (attrB, attrI, attrRanges)
 import MyPrelude
-import TestPrelude
 import Text.Pandoc.Definition (Block, Inline (Link), Pandoc (..))
-import Wiki.LSP.Util (positionInRange)
-import Wiki.LinkTarget (LinkTarget (OtherUri, Wikilink))
-import Wiki.Page.TH (md)
-import Wiki.Page.Utils (attrB, attrI, attrRanges)
+import Utils.LSP (positionInRange)
 
 data BI = B Block | I Inline
   deriving (Show, Eq, Ord)

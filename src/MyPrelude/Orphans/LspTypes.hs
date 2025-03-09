@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Orphans.LspTypes where
+module MyPrelude.Orphans.LspTypes where
 
 import ClassyPrelude
 import Language.LSP.Protocol.Message (ErrorData, MessageKind (..), Method, ResponseError, TResponseError)

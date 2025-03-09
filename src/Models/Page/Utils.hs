@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Wiki.Page.Utils
+module Models.Page.Utils
   ( -- * get various bits and bobs out of a page
     getTitle,
     getFirstLineAfterFirstH1,
@@ -20,15 +20,14 @@ where
 import Commonmark.Types (SourcePos, SourceRange (..))
 import Language.LSP.Protocol.Lens qualified as J
 import Language.LSP.Protocol.Types (Position (Position), Range (Range))
+import Models.Page.TH
 import MyPrelude
-import TestPrelude
 import Text.Megaparsec qualified as P
 import Text.Megaparsec.Char qualified as P
 import Text.Megaparsec.Char.Lexer qualified as P
 import Text.Pandoc.Definition
 import Text.Parsec.Pos qualified as Parsec
-import Wiki.LSP.Util
-import Wiki.Page.TH
+import Utils.LSP
 
 type Parser = P.ParsecT Void Text (State String)
 

@@ -1,11 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module TH.Utils where
+module Utils.TH where
 
 import Data.Char (isSpace)
 import Data.Text qualified as T
 import MyPrelude
-import TestPrelude
 
 trimQuasiQuotation :: (MonadFail m) => String -> m Text
 trimQuasiQuotation = trim . pack

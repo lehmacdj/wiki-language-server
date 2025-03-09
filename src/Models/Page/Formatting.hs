@@ -1,7 +1,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Wiki.Page.Formatting
+module Models.Page.Formatting
   ( editsForPage,
     FormattingOptions (..),
     FormattingOperation (..),
@@ -14,12 +14,11 @@ module Wiki.Page.Formatting
 where
 
 import Language.LSP.Protocol.Types
+import Models.Page.TH
+import Models.Page.Utils (attrRanges)
 import MyPrelude
-import TestPrelude
 import Text.Pandoc.Definition
 import Text.Pandoc.Walk (query)
-import Wiki.Page.TH
-import Wiki.Page.Utils (attrRanges)
 
 data FormattingOperation
   = -- | Represents an operation that converts a link like @[[random-id]]@ into

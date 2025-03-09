@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -27,34 +27,36 @@ source-repository head
 
 library
   exposed-modules:
-      Executable.LSP
+      DAL.VFS
+      Executable.WikiLanguageServer
+      Executable.WikiLanguageServer.ServerDefinition
+      Handlers
+      Handlers.TH
+      Models.Diagnostics
+      Models.LinkTarget
+      Models.Page.Formatting
+      Models.Page.GotoDefinition
+      Models.Page.Parser
+      Models.Page.TH
+      Models.Page.Utils
+      Models.Slug
+      Models.WikiLanguageServerConfig
       MyPrelude
       MyPrelude.EarlyReturn
       MyPrelude.EarlyReturn.Class
+      MyPrelude.Effect
       MyPrelude.ExceptionErrorT
+      MyPrelude.Orphans
+      MyPrelude.Orphans.LspTypes
+      MyPrelude.Orphans.PandocLift
       MyPrelude.RawStrings
+      MyPrelude.Testing
       NoteInfoCache
-      Orphans
-      Orphans.LspTypes
-      Orphans.PandocLift
       Spec
-      TestPrelude
-      TH.Utils
-      Wiki.Diagnostics
-      Wiki.LinkTarget
-      Wiki.LSP.Config
-      Wiki.LSP.Handlers
-      Wiki.LSP.Handlers.TH
-      Wiki.LSP.Logging
-      Wiki.LSP.ServerDefinition
-      Wiki.LSP.Util
-      Wiki.Page.Formatting
-      Wiki.Page.GotoDefinition
-      Wiki.Page.Parser
-      Wiki.Page.TH
-      Wiki.Page.Utils
-      Wiki.Slug
-      XdgPaths
+      Utils.Logging
+      Utils.LSP
+      Utils.TH
+      Utils.XdgPaths
   other-modules:
       Paths_wiki_language_server
   hs-source-dirs:
@@ -99,6 +101,7 @@ library
       StandaloneDeriving
       StandaloneKindSignatures
       StrictData
+      TemplateHaskell
       TemplateHaskellQuotes
       TupleSections
       TypeApplications
@@ -119,6 +122,8 @@ library
     , containers
     , data-default
     , directory
+    , effectful
+    , effectful-th
     , exceptions
     , filepath
     , generic-lens
@@ -196,6 +201,7 @@ executable wiki-language-server
       StandaloneDeriving
       StandaloneKindSignatures
       StrictData
+      TemplateHaskell
       TemplateHaskellQuotes
       TupleSections
       TypeApplications
@@ -216,6 +222,8 @@ executable wiki-language-server
     , containers
     , data-default
     , directory
+    , effectful
+    , effectful-th
     , exceptions
     , filepath
     , generic-lens
@@ -295,6 +303,7 @@ test-suite wiki-language-server-test
       StandaloneDeriving
       StandaloneKindSignatures
       StrictData
+      TemplateHaskell
       TemplateHaskellQuotes
       TupleSections
       TypeApplications
@@ -315,6 +324,8 @@ test-suite wiki-language-server-test
     , containers
     , data-default
     , directory
+    , effectful
+    , effectful-th
     , exceptions
     , filepath
     , generic-lens

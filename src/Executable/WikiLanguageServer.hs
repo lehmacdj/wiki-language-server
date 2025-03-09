@@ -1,9 +1,9 @@
-module Executable.LSP (main) where
+module Executable.WikiLanguageServer (main) where
 
 import Language.LSP.Server
 import MyPrelude
 import System.Exit
-import Wiki.LSP.ServerDefinition
+import Executable.WikiLanguageServer.ServerDefinition
 
 exitCodeFromInt :: Int -> ExitCode
 exitCodeFromInt = \case

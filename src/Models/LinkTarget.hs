@@ -1,11 +1,11 @@
 -- This module stores the 'LinkTarget' type and functions for interpreting it
 -- into 'FilePath' based on environmental information.
-module Wiki.LinkTarget where
+module Models.LinkTarget where
 
 import Language.LSP.Protocol.Types (Uri (Uri))
 import MyPrelude
 import System.Directory
-import Wiki.Slug qualified as Slug
+import Models.Slug qualified as Slug
 
 -- | TODO: consider adding anchors; then we could also detect anchor links &
 -- add them to getLinkTargetAtPosition

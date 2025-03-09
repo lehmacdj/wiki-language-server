@@ -1,4 +1,4 @@
-module XdgPaths where
+module Utils.XdgPaths where
 
 import MyPrelude
 import System.Environment.XDG.BaseDir

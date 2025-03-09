@@ -1,10 +1,10 @@
-module Wiki.LSP.Util where
+module Utils.LSP where
 
 import Language.LSP.Diagnostics
 import Language.LSP.Protocol.Types
 import Language.LSP.Server
 import MyPrelude
-import Wiki.LSP.Config
+import Models.WikiLanguageServerConfig
 
 sendDiagnostics ::
   (MonadLsp Config m) => NormalizedUri -> Maybe Int32 -> [Diagnostic] -> m ()

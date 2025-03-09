@@ -1,5 +1,5 @@
 -- | Handlers for the LSP client methods.
-module Wiki.LSP.Handlers (handlers) where
+module Handlers (handlers) where
 
 import Language.LSP.Protocol.Lens as J hiding (to)
 import Language.LSP.Protocol.Message
@@ -9,16 +9,16 @@ import Language.LSP.VFS
 import MyPrelude
 import System.Directory (getCurrentDirectory)
 import Text.Pandoc.Definition (Pandoc)
-import Wiki.Diagnostics
-import Wiki.LSP.Config
-import Wiki.LSP.Logging
-import Wiki.LSP.Util
-import Wiki.LinkTarget
-import Wiki.Page.Formatting qualified as Formatting
-import Wiki.Page.GotoDefinition qualified as GotoDefinition
-import Wiki.Page.Parser qualified as Page
-import Wiki.Page.Utils qualified as Page
-import Wiki.Slug qualified as Slug
+import Models.Diagnostics
+import Models.WikiLanguageServerConfig
+import Utils.Logging
+import Utils.LSP
+import Models.LinkTarget
+import Models.Page.Formatting qualified as Formatting
+import Models.Page.GotoDefinition qualified as GotoDefinition
+import Models.Page.Parser qualified as Page
+import Models.Page.Utils qualified as Page
+import Models.Slug qualified as Slug
 
 type MonadTResponseError method m = MonadError (TResponseError method) m
 

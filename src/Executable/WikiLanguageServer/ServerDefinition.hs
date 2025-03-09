@@ -1,11 +1,11 @@
-module Wiki.LSP.ServerDefinition (serverDefinition) where
+module Executable.WikiLanguageServer.ServerDefinition (serverDefinition) where
 
+import Handlers
 import Language.LSP.Protocol.Types
 import Language.LSP.Server
+import Models.WikiLanguageServerConfig
 import MyPrelude
 import Paths_wiki_language_server (version)
-import Wiki.LSP.Config
-import Wiki.LSP.Handlers
 
 type HandlerM = LspT Config IO
 
@@ -37,7 +37,7 @@ serverDefinition =
   ServerDefinition
     { defaultConfig = def,
       configSection = "wiki-language-server",
-      parseConfig = Wiki.LSP.Config.parseConfig,
+      parseConfig = Models.WikiLanguageServerConfig.parseConfig,
       onConfigChange = const $ pure (),
       doInitialize = \env _ -> pure (Right env),
       staticHandlers = const handlers,

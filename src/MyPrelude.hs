@@ -88,9 +88,11 @@ import Data.Void as X (Void, absurd)
 import GHC.Stack as X (HasCallStack)
 import GHC.TypeLits as X
 import MyPrelude.EarlyReturn as X
+import MyPrelude.Effect as X
 import MyPrelude.ExceptionErrorT as X
+import MyPrelude.Orphans ()
 import MyPrelude.RawStrings as X
-import Orphans ()
+import MyPrelude.Testing as X
 
 -- | Throw an error in place of Nothing. So named because generally the
 -- exception will describe the error that took place causing a result of

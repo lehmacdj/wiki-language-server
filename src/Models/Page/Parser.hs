@@ -1,4 +1,4 @@
-module Wiki.Page.Parser where
+module Models.Page.Parser where
 
 import Commonmark
 import Commonmark.Extensions
@@ -8,8 +8,8 @@ import Text.Pandoc.Builder qualified as Pandoc
 import Text.Pandoc.Definition
 import Text.Parsec.Error qualified as Parsec
 import Text.Parsec.Pos qualified as Parsec
-import Wiki.Diagnostics
-import Wiki.LSP.Util
+import Models.Diagnostics
+import Utils.LSP
 
 parseErrorFromParsec :: Parsec.ParseError -> Diagnostic
 parseErrorFromParsec err =

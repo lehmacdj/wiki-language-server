@@ -2,7 +2,7 @@
 -- a mega handler from a bunch of little handlers. The idea is sound, but
 -- implementing this would end up being a lot more trouble than it's worth at
 -- the moment.
-module Wiki.LSP.Handlers.TH where
+module Handlers.TH where
 
 -- import Language.Haskell.TH
 -- import MyPrelude

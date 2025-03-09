@@ -1,7 +1,7 @@
 module Main where
 
-import Executable.LSP qualified as LSP
+import Executable.WikiLanguageServer qualified as WikiLanguageServer
 import MyPrelude
 
 main :: IO ()
-main = LSP.main
+main = WikiLanguageServer.main

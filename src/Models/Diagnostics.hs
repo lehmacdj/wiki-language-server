@@ -1,4 +1,4 @@
-module Wiki.Diagnostics
+module Models.Diagnostics
   ( DiagnosticKind (..),
     mkDiagnostic,
 

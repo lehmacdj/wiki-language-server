@@ -1,6 +1,6 @@
 -- | Template Haskell for creating pages (Pandoc data structure) from in a
 -- QuasiQuotation
-module Wiki.Page.TH where
+module Models.Page.TH where
 
 import Language.Haskell.TH.Quote
   ( QuasiQuoter
@@ -12,8 +12,8 @@ import Language.Haskell.TH.Quote
       ),
   )
 import MyPrelude
-import TH.Utils
-import Wiki.Page.Parser qualified as Page
+import Utils.TH
+import Models.Page.Parser qualified as Page
 
 md :: QuasiQuoter
 md =

@@ -1,6 +1,6 @@
 -- | Probably want to add my own `getLogger` function that I can override with
 -- local eventually so I can add context to the logging that I do here
-module Wiki.LSP.Logging where
+module Utils.Logging where
 
 import Colog.Core
 import Language.LSP.Logging

@@ -1,4 +1,4 @@
-module Wiki.LSP.Config where
+module Models.WikiLanguageServerConfig where
 
 import Data.Aeson
 import Data.Aeson.KeyMap qualified as KeyMap

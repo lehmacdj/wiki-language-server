@@ -1,8 +1,8 @@
-module Wiki.Slug where
+module Models.Slug where
 
 import Language.LSP.Protocol.Types (NormalizedUri, toNormalizedUri)
 import MyPrelude
-import Wiki.Diagnostics (Uri (Uri))
+import Models.Diagnostics (Uri (Uri))
 
 intoFilePathRelativeToDir :: FilePath -> Text -> FilePath
 intoFilePathRelativeToDir dir slug = dir <> "/" <> unpack slug <> ".md"

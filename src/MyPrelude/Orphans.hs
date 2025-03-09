@@ -1,13 +1,13 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Orphans where
+module MyPrelude.Orphans where
 
 import ClassyPrelude
 import Control.Monad.Trans
 import Language.LSP.Server
-import Orphans.LspTypes ()
-import Orphans.PandocLift ()
+import MyPrelude.Orphans.LspTypes ()
+import MyPrelude.Orphans.PandocLift ()
 
 instance
   {-# OVERLAPPABLE #-}

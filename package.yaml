@@ -34,6 +34,8 @@ dependencies:
 - containers
 - data-default
 - directory
+- effectful
+- effectful-th
 - exceptions
 - filepath
 - generic-lens
@@ -106,6 +108,7 @@ default-extensions:
 - StandaloneDeriving
 - StandaloneKindSignatures
 - StrictData
+- TemplateHaskell
 - TemplateHaskellQuotes
 - TupleSections
 - TypeApplications
