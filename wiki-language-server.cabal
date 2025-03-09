@@ -31,7 +31,12 @@ library
       Executable.WikiLanguageServer
       Executable.WikiLanguageServer.ServerDefinition
       Handlers
-      Handlers.TH
+      Handlers.Initialized
+      Handlers.Prelude
+      Handlers.TextDocument.Definition
+      Handlers.TextDocument.DidChange
+      Handlers.TextDocument.DidOpen
+      Handlers.TextDocument.Formatting
       Models.Diagnostics
       Models.LinkTarget
       Models.Page.Formatting

@@ -85,7 +85,6 @@ import Data.List.NonEmpty as X (NonEmpty (..))
 import Data.Monoid (Alt (Alt, getAlt))
 import Data.Proxy as X (Proxy (..))
 import Data.Void as X (Void, absurd)
-import GHC.Stack as X (HasCallStack)
 import GHC.TypeLits as X
 import MyPrelude.EarlyReturn as X
 import MyPrelude.Effect as X
