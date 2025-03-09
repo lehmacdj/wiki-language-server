@@ -3,9 +3,8 @@ module Handlers (handlers) where
 
 import Handlers.Initialized
 import Handlers.Prelude
+import Handlers.TextDocument.Changes
 import Handlers.TextDocument.Definition
-import Handlers.TextDocument.DidChange
-import Handlers.TextDocument.DidOpen
 import Handlers.TextDocument.Formatting
 import Models.WikiLanguageServerConfig
 import MyPrelude

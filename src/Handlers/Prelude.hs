@@ -7,8 +7,9 @@ where
 import Language.LSP.Protocol.Lens as J hiding (to)
 import Language.LSP.Protocol.Message as X
 import Language.LSP.Protocol.Types as X
-import Language.LSP.Server as X
-import Language.LSP.VFS as X
+import Language.LSP.Server
+import Language.LSP.Server as X (Handlers, MonadLsp, notificationHandler, requestHandler)
+import Language.LSP.VFS
 import Models.Page.Parser qualified as Page
 import Models.WikiLanguageServerConfig
 import MyPrelude
@@ -21,50 +22,44 @@ type MonadTResponseError method m = MonadError (TResponseError method) m
 type Response (m :: Method 'ClientToServer 'Request) =
   Either (TResponseError m) (MessageResult m)
 
-tryGetContents ::
-  ( MonadLsp Config m,
-    HasParams msg p,
+uriFromMessage ::
+  ( HasParams msg p,
     HasTextDocument p t,
     HasUri t Uri
   ) =>
-  msg ->
-  m (NormalizedUri, Maybe (Int32, Text))
-tryGetContents message =
-  let uri = message ^. J.params . J.textDocument . J.uri
-   in tryGetVfsUriContents uri
+  msg -> NormalizedUri
+uriFromMessage = view $ J.params . J.textDocument . J.uri . to toNormalizedUri
 
 tryGetVfsUriContents ::
   (MonadLsp Config m) =>
-  Uri ->
-  m (NormalizedUri, Maybe (Int32, Text))
-tryGetVfsUriContents uri = do
-  let nuri = toNormalizedUri uri
+  NormalizedUri ->
+  m (Maybe (Int32, Text))
+tryGetVfsUriContents nuri =
   getVirtualFile nuri <&> \case
-    Nothing -> (nuri, Nothing)
-    Just vf -> (nuri, Just (virtualFileVersion vf, virtualFileText vf))
+    Nothing -> Nothing
+    Just vf -> Just (virtualFileVersion vf, virtualFileText vf)
 
 tryGetUriContents ::
   (MonadLsp Config m) =>
-  Uri ->
+  NormalizedUri ->
   -- | if the version is provided, the contents were found in the VFS
   -- otherwise we read the contents from the filesystem if it isn't Nothing
-  m (NormalizedUri, Maybe Int32, Maybe Text)
-tryGetUriContents uri = withEarlyReturn do
-  (nuri, mVfsContents) <- tryGetVfsUriContents uri
+  m (Maybe Int32, Maybe Text)
+tryGetUriContents nuri = withEarlyReturn do
+  mVfsContents <- tryGetVfsUriContents nuri
   case mVfsContents of
-    Just (version, contents) -> returnEarly (nuri, Just version, Just contents)
+    Just (version, contents) -> returnEarly (Just version, Just contents)
     Nothing -> pure ()
   filePath <-
     onNothing
       (nuriToFilePath nuri)
-      (returnEarly (nuri, Nothing @Int32, Nothing @Text))
+      (returnEarly (Nothing @Int32, Nothing @Text))
   try @_ @IOError (readFileUtf8 filePath) <&> \case
-    Left _ -> (nuri, Nothing, Nothing)
-    Right contents -> (nuri, Nothing, Just contents)
+    Left _ -> (Nothing, Nothing)
+    Right contents -> (Nothing, Just contents)
 
 parseDocument :: NormalizedUri -> Text -> Either Diagnostic Pandoc
-parseDocument nuri =
-  Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri)
+parseDocument nuri = Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri)
 
 parseDocumentThrow ::
   (MonadTResponseError method m, MonadLsp c m) =>

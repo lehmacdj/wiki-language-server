@@ -13,10 +13,10 @@ pageForSlug ::
   (MonadLsp Config m, MonadTResponseError method m) => Text -> m (Maybe Pandoc)
 pageForSlug slug = withEarlyReturn do
   currentDirectory <- liftIO getCurrentDirectory
-  let uri = Slug.intoUri currentDirectory slug
-  (nuri, _, mContents) <- tryGetUriContents uri
+  let uri = toNormalizedUri $ Slug.intoUri currentDirectory slug
+  (_, mContents) <- tryGetUriContents uri
   contents <- onNothing mContents . returnEarly $ Nothing @Pandoc
-  pure . justFromRight $ parseDocument nuri contents
+  pure . justFromRight $ parseDocument uri contents
 
 -- | Get the title for a slug returning Nothing if the file isn't found or we
 -- can't find the title in the page
@@ -32,9 +32,10 @@ textDocumentFormatting ::
   TRequestMessage 'Method_TextDocumentFormatting ->
   m (Response 'Method_TextDocumentFormatting)
 textDocumentFormatting request = runExceptionErrorT $ do
-  (nuri, mVersionContents) <- lift $ tryGetContents request
+  let uri = uriFromMessage request
+  mVersionContents <- tryGetVfsUriContents uri
   (_, contents) <- onNothing mVersionContents throwNoContentsAvailable
-  parsed <- parseDocumentThrow nuri contents
+  parsed <- parseDocumentThrow uri contents
   let edits = Formatting.editsForPage parsed
   resolvedEdits <- traverse (Formatting.textEditOfOperation titleForSlug) edits
   pure . InL $ concat resolvedEdits

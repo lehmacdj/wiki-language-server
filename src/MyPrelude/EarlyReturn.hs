@@ -10,6 +10,7 @@ import Control.Monad.Except
 import Control.Monad.State
 import Data.Proxy (Proxy (..))
 import Data.Typeable (typeRep)
+import Language.LSP.Server (MonadLsp)
 import MyPrelude.EarlyReturn.Class as X
 import Prelude as X (showChar, showParen, showString, shows)
 
@@ -25,7 +26,8 @@ newtype EarlyReturnT r m a = EarlyReturnT {underlying :: m a}
       MonadUnliftIO,
       MonadState x,
       MonadReader x,
-      MonadError e
+      MonadError e,
+      MonadLsp c
     )
 
 instance MonadTrans (EarlyReturnT r) where

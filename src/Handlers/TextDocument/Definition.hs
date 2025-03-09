@@ -14,7 +14,8 @@ textDocumentDefinition ::
   TRequestMessage 'Method_TextDocumentDefinition ->
   m (Response 'Method_TextDocumentDefinition)
 textDocumentDefinition request = runExceptionErrorT . withEarlyReturn $ do
-  (nuri, mVersionContents) <- lift $ tryGetContents request
+  let nuri = uriFromMessage request
+  mVersionContents <- lift $ tryGetVfsUriContents nuri
   (_, contents) <- onNothing mVersionContents throwNoContentsAvailable
   parsed <- parseDocumentThrow nuri contents
   let position = request ^. J.params . J.position
@@ -29,7 +30,8 @@ textDocumentDefinition request = runExceptionErrorT . withEarlyReturn $ do
   -- paragraph defaulting to the start of the document if we can't find one
   targetUri <- relativeToWorkingDirectory link
   let targetLocation p = InL . Definition . InL $ Location targetUri p
-  (targetNuri, _targetNuriVersion, mTargetContents) <- tryGetUriContents targetUri
+  let targetNuri = toNormalizedUri targetUri
+  (_targetNuriVersion, mTargetContents) <- tryGetUriContents targetNuri
   targetContents <-
     onNothing mTargetContents . returnEarly $ targetLocation (atLineCol 0 0)
   targetParsed <-

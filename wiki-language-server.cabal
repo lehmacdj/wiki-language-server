@@ -33,9 +33,8 @@ library
       Handlers
       Handlers.Initialized
       Handlers.Prelude
+      Handlers.TextDocument.Changes
       Handlers.TextDocument.Definition
-      Handlers.TextDocument.DidChange
-      Handlers.TextDocument.DidOpen
       Handlers.TextDocument.Formatting
       Models.Diagnostics
       Models.LinkTarget
