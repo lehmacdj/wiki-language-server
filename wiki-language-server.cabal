@@ -27,7 +27,6 @@ source-repository head
 
 library
   exposed-modules:
-      DAL.VFS
       Executable.WikiLanguageServer
       Executable.WikiLanguageServer.ServerDefinition
       Handlers
@@ -36,6 +35,8 @@ library
       Handlers.TextDocument.Changes
       Handlers.TextDocument.Definition
       Handlers.TextDocument.Formatting
+      LSP.Raw
+      LSP.VFS
       Models.Diagnostics
       Models.LinkTarget
       Models.Page.Formatting
@@ -49,11 +50,14 @@ library
       MyPrelude.EarlyReturn
       MyPrelude.EarlyReturn.Class
       MyPrelude.Effect
+      MyPrelude.Effect.EarlyReturn
       MyPrelude.ExceptionErrorT
+      MyPrelude.MaybeEither
       MyPrelude.Orphans
       MyPrelude.Orphans.LspTypes
       MyPrelude.Orphans.PandocLift
       MyPrelude.RawStrings
+      MyPrelude.RestrictedClassyPrelude
       MyPrelude.Testing
       NoteInfoCache
       Spec
