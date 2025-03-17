@@ -96,18 +96,3 @@ throwDocumentStateDoesNotParse = do
         _message = msg,
         _xdata = Nothing
       }
-
-rootExceptionHandler ::
-  (Logging :> es, Error (TResponseError method) :> es) =>
-  Eff es a ->
-  Eff es a
-rootExceptionHandler action =
-  action `catchAny` \e -> do
-    let msg = "Encountered unrecoverable IO error during request: " <> tshow e
-    logError msg
-    throwError_
-      $ TResponseError
-        { _code = InR ErrorCodes_InternalError,
-          _message = msg,
-          _xdata = Nothing
-        }

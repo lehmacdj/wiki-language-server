@@ -11,16 +11,33 @@ import Models.WikiLanguageServerConfig
 import MyPrelude
 import Paths_wiki_language_server (version)
 
+-- | Convert any synchronous exception into a TResponseError
+rootExceptionHandler ::
+  (Logging :> es, Error (TResponseError method) :> es) =>
+  Eff es a ->
+  Eff es a
+rootExceptionHandler action =
+  action `catchAny` \e -> do
+    let msg = "Encountered unrecoverable error during request: " <> tshow e
+    logError msg
+    throwError_
+      $ TResponseError
+        { _code = InR ErrorCodes_InternalError,
+          _message = msg,
+          _xdata = Nothing
+        }
+
 -- | Shim for making requestHandler easier to use in the simple way that one
 -- generally wants to use it
 requestHandler' ::
   forall (m :: Method 'ClientToServer 'Request) es.
+  (Logging :> es) =>
   ( SMethod m ->
     (TRequestMessage m -> Eff (Error (TResponseError m) : es) (MessageResult m)) ->
     Handlers (Eff es)
   )
 requestHandler' s handler = requestHandler s \request responder -> do
-  runErrorNoCallStack (handler request) >>= responder
+  runErrorNoCallStack (rootExceptionHandler (handler request)) >>= responder
 
 handlers :: Handlers (Eff Effects)
 handlers =
