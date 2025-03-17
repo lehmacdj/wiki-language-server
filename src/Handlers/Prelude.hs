@@ -20,9 +20,6 @@ import Utils.Logging as X
 
 type MonadTResponseError method m = MonadError (TResponseError method) m
 
-type Response (m :: Method 'ClientToServer 'Request) =
-  Either (TResponseError m) (MessageResult m)
-
 type HandlerFor (m :: Method 'ClientToServer 'Request) es =
   TRequestMessage m -> Eff (Error (TResponseError m) : es) (MessageResult m)
 
