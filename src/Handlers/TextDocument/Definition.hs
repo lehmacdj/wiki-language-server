@@ -5,17 +5,15 @@ import Language.LSP.Protocol.Lens as J hiding (to)
 import Models.LinkTarget
 import Models.Page.GotoDefinition qualified as GotoDefinition
 import Models.Page.Utils qualified as Page
-import Models.WikiLanguageServerConfig
 import MyPrelude
 import Utils.LSP
 
 textDocumentDefinition ::
-  (MonadLsp Config m) =>
-  TRequestMessage 'Method_TextDocumentDefinition ->
-  m (Response 'Method_TextDocumentDefinition)
-textDocumentDefinition request = runExceptionErrorT . withEarlyReturn $ do
+  (LSP :> es, IOE :> es, VFSAccess :> es, FileSystem :> es) =>
+  HandlerFor 'Method_TextDocumentDefinition es
+textDocumentDefinition request = withEarlyReturn $ do
   let nuri = uriFromMessage request
-  mVersionContents <- lift $ tryGetVfsUriContents nuri
+  mVersionContents <- tryGetVfsUriContents nuri
   (_, contents) <- onNothing mVersionContents throwNoContentsAvailable
   parsed <- parseDocumentThrow nuri contents
   let position = request ^. J.params . J.position
@@ -40,6 +38,6 @@ textDocumentDefinition request = runExceptionErrorT . withEarlyReturn $ do
       (const . returnEarly $ targetLocation (atLineCol 0 0))
   pos <-
     onNothing
-      (Page.getFirstLineAfterFirstH1 targetParsed)
+      (Page.getFirstH1Position targetParsed)
       (returnEarly . targetLocation $ atLineCol 0 0)
   pure $ targetLocation (rangeFromPosition pos)

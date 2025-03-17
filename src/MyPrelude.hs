@@ -48,7 +48,6 @@ import Control.Lens as X
     _head,
   )
 import Control.Monad as X (MonadFail (fail))
-import Control.Monad.Error.Class as X (MonadError (..))
 import Control.Monad.Except as X (ExceptT (..), runExceptT)
 import Control.Monad.Reader.Class as X
 import Control.Monad.State as X
@@ -64,14 +63,15 @@ import Control.Monad.State as X
 import Control.Monad.State.Class as X
 import Control.Monad.Trans.Class as X (MonadTrans (..))
 import Data.Default as X (Default (..))
+import Data.Functor.Contravariant as X (Contravariant (contramap))
 import Data.Generics.Labels ()
 import Data.List.NonEmpty as X (NonEmpty (..))
 import Data.Monoid (Alt (Alt, getAlt))
 import Data.Proxy as X (Proxy (..))
 import Data.Void as X (Void, absurd)
 import GHC.TypeLits as X
-import MyPrelude.EarlyReturn as X
 import MyPrelude.Effect as X
+import MyPrelude.Effect.EarlyReturn as X
 import MyPrelude.ExceptionErrorT as X
 import MyPrelude.MaybeEither as X
 import MyPrelude.Orphans ()

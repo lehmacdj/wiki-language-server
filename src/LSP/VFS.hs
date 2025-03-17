@@ -1,6 +1,8 @@
 module LSP.VFS where
 
+import Colog.Core (Severity (..), WithSeverity (..))
 import LSP.Raw
+import Language.LSP.Logging qualified as Logging
 import Language.LSP.Protocol.Types
 import Language.LSP.Server qualified as Server
 import Language.LSP.VFS (VFS, VirtualFile)
@@ -16,11 +18,12 @@ data VFSAccess :: Effect where
 
 makeEffect ''VFSAccess
 
-runVFSAccess :: (LSP :> es) => Eff (VFSAccess : es) a -> Eff es a
+runVFSAccess :: (LSP :> es, IOE :> es) => Eff (VFSAccess : es) a -> Eff es a
 runVFSAccess = interpret_ \case
   GetVirtualFile uri -> Server.getVirtualFile uri
   GetVirtualFiles -> Server.getVirtualFiles
   PersistVirtualFile path uri ->
-    Server.persistVirtualFile Server.logToLogMessage path uri
+    let logAction = contramap ((`WithSeverity` Info) . tshow) Logging.logToLogMessage
+     in Server.persistVirtualFile logAction path uri
   GetVersionedTextDoc tdi -> Server.getVersionedTextDoc tdi
   ReverseFileMap -> Server.reverseFileMap

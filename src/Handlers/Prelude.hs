@@ -4,14 +4,15 @@ module Handlers.Prelude
   )
 where
 
+import Control.Monad.Except (MonadError)
+import LSP.Raw as X
+import LSP.VFS as X
 import Language.LSP.Protocol.Lens as J hiding (to)
 import Language.LSP.Protocol.Message as X
 import Language.LSP.Protocol.Types as X
-import Language.LSP.Server
 import Language.LSP.Server as X (Handlers, MonadLsp, notificationHandler, requestHandler)
 import Language.LSP.VFS
 import Models.Page.Parser qualified as Page
-import Models.WikiLanguageServerConfig
 import MyPrelude
 import Text.Pandoc.Definition (Pandoc)
 import Utils.LSP
@@ -22,6 +23,9 @@ type MonadTResponseError method m = MonadError (TResponseError method) m
 type Response (m :: Method 'ClientToServer 'Request) =
   Either (TResponseError m) (MessageResult m)
 
+type HandlerFor (m :: Method 'ClientToServer 'Request) es =
+  TRequestMessage m -> Eff (Error (TResponseError m) : es) (MessageResult m)
+
 uriFromMessage ::
   ( HasParams msg p,
     HasTextDocument p t,
@@ -31,20 +35,20 @@ uriFromMessage ::
 uriFromMessage = view $ J.params . J.textDocument . J.uri . to toNormalizedUri
 
 tryGetVfsUriContents ::
-  (MonadLsp Config m) =>
+  (VFSAccess :> es) =>
   NormalizedUri ->
-  m (Maybe (Int32, Text))
+  Eff es (Maybe (Int32, Text))
 tryGetVfsUriContents nuri =
   getVirtualFile nuri <&> \case
     Nothing -> Nothing
     Just vf -> Just (virtualFileVersion vf, virtualFileText vf)
 
 tryGetUriContents ::
-  (MonadLsp Config m) =>
+  (LSP :> es, IOE :> es, FileSystem :> es, VFSAccess :> es) =>
   NormalizedUri ->
   -- | if the version is provided, the contents were found in the VFS
   -- otherwise we read the contents from the filesystem if it isn't Nothing
-  m (Maybe Int32, Maybe Text)
+  Eff es (Maybe Int32, Maybe Text)
 tryGetUriContents nuri = withEarlyReturn do
   mVfsContents <- tryGetVfsUriContents nuri
   case mVfsContents of
@@ -54,7 +58,7 @@ tryGetUriContents nuri = withEarlyReturn do
     onNothing
       (nuriToFilePath nuri)
       (returnEarly (Nothing @Int32, Nothing @Text))
-  try @_ @IOError (readFileUtf8 filePath) <&> \case
+  try @_ @SomeException (readFileUtf8 filePath) <&> \case
     Left _ -> (Nothing, Nothing)
     Right contents -> (Nothing, Just contents)
 
@@ -62,17 +66,17 @@ parseDocument :: NormalizedUri -> Text -> Either Diagnostic Pandoc
 parseDocument nuri = Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri)
 
 parseDocumentThrow ::
-  (MonadTResponseError method m, MonadLsp c m) =>
-  NormalizedUri -> Text -> m Pandoc
+  (IOE :> es, LSP :> es, Error (TResponseError method) :> es) =>
+  NormalizedUri -> Text -> Eff es Pandoc
 parseDocumentThrow nuri contents =
   onLeft (parseDocument nuri contents) (const throwDocumentStateDoesNotParse)
 
 throwNoContentsAvailable ::
-  (MonadLsp c m, MonadTResponseError method m) => m a
+  (IOE :> es, LSP :> es, Error (TResponseError method) :> es) => Eff es a
 throwNoContentsAvailable = do
   let msg = "Failed to retrieve text from requested document."
   logError msg
-  throwError
+  throwError_
     $ TResponseError
       { _code = InL LSPErrorCodes_RequestFailed,
         _message = msg,
@@ -85,26 +89,26 @@ throwNoContentsAvailable = do
 -- so it isn't necessary to report the parse failure at use sites of this
 -- function.
 throwDocumentStateDoesNotParse ::
-  (MonadLsp c m, MonadError (TResponseError method) m) => m a
+  (IOE :> es, LSP :> es, Error (TResponseError method) :> es) => Eff es a
 throwDocumentStateDoesNotParse = do
   let msg = "Current document state doesn't parse"
   logError msg
-  throwError
+  throwError_
     $ TResponseError
       { _code = InL LSPErrorCodes_RequestFailed,
         _message = msg,
         _xdata = Nothing
       }
 
-_rethrowIOException ::
-  (MonadUnliftIO m, MonadError (TResponseError method) m, MonadLsp c m) =>
-  m a ->
-  m a
-_rethrowIOException action =
-  action `catch` \(ioe :: IOError) -> do
-    let msg = "Encountered unrecoverable IO error during request: " <> tshow ioe
+rootExceptionHandler ::
+  (LSP :> es, IOE :> es, Error (TResponseError method) :> es) =>
+  Eff es a ->
+  Eff es a
+rootExceptionHandler action =
+  action `catchAny` \e -> do
+    let msg = "Encountered unrecoverable IO error during request: " <> tshow e
     logError msg
-    throwError
+    throwError_
       $ TResponseError
         { _code = InR ErrorCodes_InternalError,
           _message = msg,

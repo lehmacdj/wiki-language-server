@@ -44,6 +44,7 @@ extra-deps:
 - lsp-2.7.0.1
 - effectful-2.5.1.0
 - effectful-core-2.5.1.0
+# - effectful-plugin-1.1.0.4
 - strict-mutable-base-1.1.0.0
 
 # Override default flag values for local packages and extra-deps

@@ -1,12 +1,12 @@
 module Handlers.TextDocument.Changes where
 
 import Handlers.Prelude
-import Models.WikiLanguageServerConfig
 import MyPrelude
 import Utils.LSP
 
 textDocumentDidOpen ::
-  (MonadLsp Config m) => TNotificationMessage 'Method_TextDocumentDidOpen -> m ()
+  (LSP :> es, VFSAccess :> es, IOE :> es) =>
+  TNotificationMessage 'Method_TextDocumentDidOpen -> Eff es ()
 textDocumentDidOpen notification = withEarlyReturn do
   let uri = uriFromMessage notification
   mVersionContents <- tryGetVfsUriContents uri
@@ -16,7 +16,8 @@ textDocumentDidOpen notification = withEarlyReturn do
     Right _ -> pure ()
 
 textDocumentDidChange ::
-  (MonadLsp Config m) => TNotificationMessage 'Method_TextDocumentDidChange -> m ()
+  (LSP :> es, VFSAccess :> es, IOE :> es) =>
+  TNotificationMessage 'Method_TextDocumentDidChange -> Eff es ()
 textDocumentDidChange notification = withEarlyReturn do
   let uri = uriFromMessage notification
   mVersionContents <- tryGetVfsUriContents uri

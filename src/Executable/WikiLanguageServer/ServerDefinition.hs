@@ -1,19 +1,40 @@
 module Executable.WikiLanguageServer.ServerDefinition (serverDefinition) where
 
-import Handlers
-import Language.LSP.Protocol.Types
+import Executable.WikiLanguageServer.Interpreter
+import Handlers.Initialized
+import Handlers.Prelude
+import Handlers.TextDocument.Changes
+import Handlers.TextDocument.Definition
+import Handlers.TextDocument.Formatting
 import Language.LSP.Server
 import Models.WikiLanguageServerConfig
 import MyPrelude
 import Paths_wiki_language_server (version)
 
-type HandlerM = LspT Config IO
+-- | Shim for making requestHandler easier to use in the simple way that one
+-- generally wants to use it
+requestHandler' ::
+  forall (m :: Method 'ClientToServer 'Request) es.
+  ( SMethod m ->
+    (TRequestMessage m -> Eff (Error (TResponseError m) : es) (MessageResult m)) ->
+    Handlers (Eff es)
+  )
+requestHandler' s handler = requestHandler s \request responder -> do
+  runErrorNoCallStack (handler request) >>= responder
 
-runHandlerM :: LanguageContextEnv Config -> HandlerM a -> IO a
-runHandlerM = runLspT
+handlers :: Handlers (Eff Effects)
+handlers =
+  mconcat
+    [ notificationHandler SMethod_Initialized initialized,
+      notificationHandler SMethod_TextDocumentDidOpen textDocumentDidOpen,
+      notificationHandler SMethod_TextDocumentDidChange textDocumentDidChange,
+      requestHandler' SMethod_TextDocumentDefinition textDocumentDefinition,
+      requestHandler' SMethod_TextDocumentFormatting textDocumentFormatting
+    ]
 
-interpretHandlerM :: LanguageContextEnv Config -> HandlerM <~> IO
-interpretHandlerM env = Iso (runHandlerM env) liftIO
+interpretHandler_ ::
+  LanguageContextEnv Config -> Eff Effects <~> IO
+interpretHandler_ env = Iso (runEffects env) liftIO
 
 serverOptions :: Options
 serverOptions =
@@ -41,6 +62,6 @@ serverDefinition =
       onConfigChange = const $ pure (),
       doInitialize = \env _ -> pure (Right env),
       staticHandlers = const handlers,
-      interpretHandler = interpretHandlerM,
+      interpretHandler = interpretHandler_,
       options = serverOptions
     }

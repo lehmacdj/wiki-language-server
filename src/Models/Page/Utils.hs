@@ -3,7 +3,7 @@
 module Models.Page.Utils
   ( -- * get various bits and bobs out of a page
     getTitle,
-    getFirstLineAfterFirstH1,
+    getFirstH1Position,
 
     -- * utils
     attrB,
@@ -13,7 +13,7 @@ module Models.Page.Utils
     -- * tests
     spec_pSourceRange,
     spec_getTitle,
-    spec_getFirstLineAfterFirstH1,
+    spec_getFirstH1Position,
   )
 where
 
@@ -269,8 +269,8 @@ spec_getTitle = do
       |]
     `shouldBe` Just "A title with in it"
 
-getFirstLineAfterFirstH1 :: Pandoc -> Maybe Position
-getFirstLineAfterFirstH1 (Pandoc _ body) =
+getFirstH1Position :: Pandoc -> Maybe Position
+getFirstH1Position (Pandoc _ body) =
   foldMapA
     ( preview
         $ #_Header
@@ -280,20 +280,20 @@ getFirstLineAfterFirstH1 (Pandoc _ body) =
         . _Just
         . _head
         . J.start
-        . to (`colOnNextLine` 0)
+        . to (`sameLineWithCol` 0)
     )
     body
 
-spec_getFirstLineAfterFirstH1 :: Spec
-spec_getFirstLineAfterFirstH1 = do
+spec_getFirstH1Position :: Spec
+spec_getFirstH1Position = do
   it "gets the title from the heading"
-    $ getFirstLineAfterFirstH1 [md|# I am a title!|]
-    `shouldBe` Just (posAtLineCol 1 0)
+    $ getFirstH1Position [md|# I am a title!|]
+    `shouldBe` Just (posAtLineCol 0 0)
   it "it fails to get the title if there isn't a h1"
-    $ getFirstLineAfterFirstH1 [md|There is no title here|]
+    $ getFirstH1Position [md|There is no title here|]
     `shouldBe` Nothing
   it "takes the first h1 even if there is stuff before it"
-    $ getFirstLineAfterFirstH1
+    $ getFirstH1Position
       [md|
         foo bar
 
@@ -301,9 +301,9 @@ spec_getFirstLineAfterFirstH1 = do
 
         # A title
       |]
-    `shouldBe` Just (posAtLineCol 5 0)
+    `shouldBe` Just (posAtLineCol 4 0)
   it "doesn't get confused by several instances of h1"
-    $ getFirstLineAfterFirstH1
+    $ getFirstH1Position
       [md|
         # A title
 
@@ -311,9 +311,9 @@ spec_getFirstLineAfterFirstH1 = do
 
         # A third heading
       |]
-    `shouldBe` Just (posAtLineCol 1 0)
+    `shouldBe` Just (posAtLineCol 0 0)
   it "isn't confused by yaml front matter"
-    $ getFirstLineAfterFirstH1
+    $ getFirstH1Position
       [md|
         ---
         tags:
@@ -324,4 +324,4 @@ spec_getFirstLineAfterFirstH1 = do
         # A title with<!--a comment--> in it
         Body content
       |]
-    `shouldBe` Just (posAtLineCol 7 0)
+    `shouldBe` Just (posAtLineCol 6 0)

@@ -3,8 +3,8 @@ module Utils.LSP where
 import Language.LSP.Diagnostics
 import Language.LSP.Protocol.Types
 import Language.LSP.Server
-import MyPrelude
 import Models.WikiLanguageServerConfig
+import MyPrelude
 
 sendDiagnostics ::
   (MonadLsp Config m) => NormalizedUri -> Maybe Int32 -> [Diagnostic] -> m ()
@@ -45,3 +45,6 @@ rangeFromPosition p =
 
 colOnNextLine :: Position -> Int -> Position
 colOnNextLine (Position line _) (fromIntegral -> col) = Position (line + 1) col
+
+sameLineWithCol :: Position -> Int -> Position
+sameLineWithCol (Position line _) (fromIntegral -> col) = Position line col

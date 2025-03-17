@@ -28,8 +28,8 @@ source-repository head
 library
   exposed-modules:
       Executable.WikiLanguageServer
+      Executable.WikiLanguageServer.Interpreter
       Executable.WikiLanguageServer.ServerDefinition
-      Handlers
       Handlers.Initialized
       Handlers.Prelude
       Handlers.TextDocument.Changes
@@ -91,6 +91,7 @@ library
       GADTs
       GeneralizedNewtypeDeriving
       ImportQualifiedPost
+      ImpredicativeTypes
       LambdaCase
       MultiParamTypeClasses
       NamedFieldPuns
@@ -117,7 +118,7 @@ library
       TypeOperators
       TypeSynonymInstances
       ViewPatterns
-  ghc-options: -Wall -Wno-name-shadowing
+  ghc-options: -Wall -Wno-name-shadowing -fplugin=Effectful.Plugin
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -131,6 +132,8 @@ library
     , data-default
     , directory
     , effectful
+    , effectful-core
+    , effectful-plugin
     , effectful-th
     , exceptions
     , filepath
@@ -149,6 +152,7 @@ library
     , prettyprinter
     , prettyprinter-ansi-terminal
     , quickcheck-instances
+    , safe-exceptions
     , sqlite-simple
     , tasty
     , tasty-discover
@@ -191,6 +195,7 @@ executable wiki-language-server
       GADTs
       GeneralizedNewtypeDeriving
       ImportQualifiedPost
+      ImpredicativeTypes
       LambdaCase
       MultiParamTypeClasses
       NamedFieldPuns
@@ -217,7 +222,7 @@ executable wiki-language-server
       TypeOperators
       TypeSynonymInstances
       ViewPatterns
-  ghc-options: -Wall -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wno-name-shadowing -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -231,6 +236,8 @@ executable wiki-language-server
     , data-default
     , directory
     , effectful
+    , effectful-core
+    , effectful-plugin
     , effectful-th
     , exceptions
     , filepath
@@ -249,6 +256,7 @@ executable wiki-language-server
     , prettyprinter
     , prettyprinter-ansi-terminal
     , quickcheck-instances
+    , safe-exceptions
     , sqlite-simple
     , tasty
     , tasty-discover
@@ -293,6 +301,7 @@ test-suite wiki-language-server-test
       GADTs
       GeneralizedNewtypeDeriving
       ImportQualifiedPost
+      ImpredicativeTypes
       LambdaCase
       MultiParamTypeClasses
       NamedFieldPuns
@@ -319,7 +328,7 @@ test-suite wiki-language-server-test
       TypeOperators
       TypeSynonymInstances
       ViewPatterns
-  ghc-options: -Wall -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wno-name-shadowing -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -333,6 +342,8 @@ test-suite wiki-language-server-test
     , data-default
     , directory
     , effectful
+    , effectful-core
+    , effectful-plugin
     , effectful-th
     , exceptions
     , filepath
@@ -351,6 +362,7 @@ test-suite wiki-language-server-test
     , prettyprinter
     , prettyprinter-ansi-terminal
     , quickcheck-instances
+    , safe-exceptions
     , sqlite-simple
     , tasty
     , tasty-discover
