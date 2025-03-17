@@ -16,7 +16,7 @@ import Models.Page.Parser qualified as Page
 import MyPrelude
 import Text.Pandoc.Definition (Pandoc)
 import Utils.LSP
-import Utils.Logging
+import Utils.Logging as X
 
 type MonadTResponseError method m = MonadError (TResponseError method) m
 
@@ -44,7 +44,7 @@ tryGetVfsUriContents nuri =
     Just vf -> Just (virtualFileVersion vf, virtualFileText vf)
 
 tryGetUriContents ::
-  (LSP :> es, IOE :> es, FileSystem :> es, VFSAccess :> es) =>
+  (Logging :> es, FileSystem :> es, VFSAccess :> es) =>
   NormalizedUri ->
   -- | if the version is provided, the contents were found in the VFS
   -- otherwise we read the contents from the filesystem if it isn't Nothing
@@ -66,13 +66,13 @@ parseDocument :: NormalizedUri -> Text -> Either Diagnostic Pandoc
 parseDocument nuri = Page.parse (fromMaybe "<unknown>" $ nuriToFilePath nuri)
 
 parseDocumentThrow ::
-  (IOE :> es, LSP :> es, Error (TResponseError method) :> es) =>
+  (Logging :> es, Error (TResponseError method) :> es) =>
   NormalizedUri -> Text -> Eff es Pandoc
 parseDocumentThrow nuri contents =
   onLeft (parseDocument nuri contents) (const throwDocumentStateDoesNotParse)
 
 throwNoContentsAvailable ::
-  (IOE :> es, LSP :> es, Error (TResponseError method) :> es) => Eff es a
+  (Logging :> es, Error (TResponseError method) :> es) => Eff es a
 throwNoContentsAvailable = do
   let msg = "Failed to retrieve text from requested document."
   logError msg
@@ -89,7 +89,7 @@ throwNoContentsAvailable = do
 -- so it isn't necessary to report the parse failure at use sites of this
 -- function.
 throwDocumentStateDoesNotParse ::
-  (IOE :> es, LSP :> es, Error (TResponseError method) :> es) => Eff es a
+  (Logging :> es, Error (TResponseError method) :> es) => Eff es a
 throwDocumentStateDoesNotParse = do
   let msg = "Current document state doesn't parse"
   logError msg
@@ -101,7 +101,7 @@ throwDocumentStateDoesNotParse = do
       }
 
 rootExceptionHandler ::
-  (LSP :> es, IOE :> es, Error (TResponseError method) :> es) =>
+  (Logging :> es, IOE :> es, Error (TResponseError method) :> es) =>
   Eff es a ->
   Eff es a
 rootExceptionHandler action =

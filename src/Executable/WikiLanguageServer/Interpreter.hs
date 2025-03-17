@@ -6,9 +6,11 @@ import LSP.VFS
 import Language.LSP.Server
 import Models.WikiLanguageServerConfig
 import MyPrelude
+import Utils.Logging
 
 type Effects =
   [ VFSAccess,
+    Logging,
     LSP,
     FileSystem,
     IOE
@@ -17,6 +19,7 @@ type Effects =
 runEffects_ :: LanguageContextEnv Config -> Eff Effects a -> IO a
 runEffects_ config =
   runVFSAccess
+    >>> runLoggingLSP
     >>> runLSP config
     >>> runFileSystem
     >>> runEff

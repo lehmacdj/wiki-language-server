@@ -2,22 +2,34 @@
 -- local eventually so I can add context to the logging that I do here
 module Utils.Logging where
 
-import Colog.Core
+import Colog.Core hiding (HasLog (..))
+import LSP.Raw
 import Language.LSP.Logging
-import Language.LSP.Server
 import MyPrelude
 
-logWarn :: (MonadLsp c m) => Text -> m ()
-logWarn msg = defaultClientLogger <& WithSeverity msg Warning
+data Logging :: Effect where
+  LogMessage :: WithSeverity Text -> Logging m ()
 
-logError :: (MonadLsp c m) => Text -> m ()
-logError msg = defaultClientLogger <& WithSeverity msg Error
+makeEffect ''Logging
 
-logException :: (MonadLsp c m, Exception e) => e -> m ()
-logException e = defaultClientLogger <& WithSeverity (tshow e) Error
+runLoggingLSP :: (LSP :> es, IOE :> es) => Eff (Logging : es) a -> Eff es a
+runLoggingLSP = interpret_ \case
+  LogMessage msg -> defaultClientLogger <& msg
 
-logInfo :: (MonadLsp c m) => Text -> m ()
-logInfo msg = defaultClientLogger <& WithSeverity msg Info
+defaultLogger :: (Logging :> es) => LogAction (Eff es) (WithSeverity Text)
+defaultLogger = LogAction logMessage
 
-logDebug :: (MonadLsp c m) => Text -> m ()
-logDebug msg = defaultClientLogger <& WithSeverity msg Debug
+logWarn :: (Logging :> es) => Text -> Eff es ()
+logWarn msg = defaultLogger <& WithSeverity msg Warning
+
+logError :: (Logging :> es) => Text -> Eff es ()
+logError msg = defaultLogger <& WithSeverity msg Error
+
+logException :: (Logging :> es, Exception e) => e -> Eff es ()
+logException e = defaultLogger <& WithSeverity (tshow e) Error
+
+logInfo :: (Logging :> es) => Text -> Eff es ()
+logInfo msg = defaultLogger <& WithSeverity msg Info
+
+logDebug :: (Logging :> es) => Text -> Eff es ()
+logDebug msg = defaultLogger <& WithSeverity msg Debug

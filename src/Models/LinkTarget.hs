@@ -2,10 +2,10 @@
 -- into 'FilePath' based on environmental information.
 module Models.LinkTarget where
 
+import Effectful.FileSystem
 import Language.LSP.Protocol.Types (Uri (Uri))
-import MyPrelude
-import System.Directory
 import Models.Slug qualified as Slug
+import MyPrelude
 
 -- | TODO: consider adding anchors; then we could also detect anchor links &
 -- add them to getLinkTargetAtPosition
@@ -22,10 +22,9 @@ data LinkTarget
   deriving (Show, Eq, Ord)
 
 -- | Interpret wikilinks as being relative to the working directory
-relativeToWorkingDirectory :: (MonadIO m) => LinkTarget -> m Uri
+relativeToWorkingDirectory :: (FileSystem :> es) => LinkTarget -> Eff es Uri
 relativeToWorkingDirectory link =
-  liftIO
-    $ relativeToDir
+  relativeToDir
     <$> getCurrentDirectory
     <*> pure link
 

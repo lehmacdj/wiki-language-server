@@ -9,7 +9,7 @@ import MyPrelude
 import Utils.LSP
 
 textDocumentDefinition ::
-  (LSP :> es, IOE :> es, VFSAccess :> es, FileSystem :> es) =>
+  (Logging :> es, VFSAccess :> es, FileSystem :> es) =>
   HandlerFor 'Method_TextDocumentDefinition es
 textDocumentDefinition request = withEarlyReturn $ do
   let nuri = uriFromMessage request
