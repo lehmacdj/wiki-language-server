@@ -1,16 +1,7 @@
 module Utils.LSP where
 
-import Language.LSP.Diagnostics
 import Language.LSP.Protocol.Types
-import Language.LSP.Server
-import Models.WikiLanguageServerConfig
 import MyPrelude
-
-sendDiagnostics ::
-  (MonadLsp Config m) => NormalizedUri -> Maybe Int32 -> [Diagnostic] -> m ()
-sendDiagnostics uri version diagnostics = do
-  Config {maxDiagnostics} <- getConfig
-  publishDiagnostics maxDiagnostics uri version (partitionBySource diagnostics)
 
 nuriToFilePath :: NormalizedUri -> Maybe FilePath
 nuriToFilePath = uriToFilePath . fromNormalizedUri

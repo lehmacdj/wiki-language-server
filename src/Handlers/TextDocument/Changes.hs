@@ -1,11 +1,11 @@
 module Handlers.TextDocument.Changes where
 
 import Handlers.Prelude
+import LSP.Diagnostics
 import MyPrelude
-import Utils.LSP
 
 textDocumentDidOpen ::
-  (LSP :> es, VFSAccess :> es, IOE :> es) =>
+  (LSP :> es, VFSAccess :> es, Diagnostics :> es) =>
   TNotificationMessage 'Method_TextDocumentDidOpen -> Eff es ()
 textDocumentDidOpen notification = withEarlyReturn do
   let uri = uriFromMessage notification
@@ -16,7 +16,7 @@ textDocumentDidOpen notification = withEarlyReturn do
     Right _ -> pure ()
 
 textDocumentDidChange ::
-  (LSP :> es, VFSAccess :> es, IOE :> es) =>
+  (LSP :> es, VFSAccess :> es, Diagnostics :> es) =>
   TNotificationMessage 'Method_TextDocumentDidChange -> Eff es ()
 textDocumentDidChange notification = withEarlyReturn do
   let uri = uriFromMessage notification

@@ -1,6 +1,7 @@
 module Executable.WikiLanguageServer.Interpreter where
 
 import Effectful.FileSystem (runFileSystem)
+import LSP.Diagnostics
 import LSP.Raw
 import LSP.VFS
 import Language.LSP.Server
@@ -11,6 +12,7 @@ import Utils.Logging
 type Effects =
   [ VFSAccess,
     Logging,
+    Diagnostics,
     LSP,
     FileSystem,
     IOE
@@ -20,6 +22,7 @@ runEffects_ :: LanguageContextEnv Config -> Eff Effects a -> IO a
 runEffects_ config =
   runVFSAccess
     >>> runLoggingLSP
+    >>> runDiagnostics
     >>> runLSP config
     >>> runFileSystem
     >>> runEff
