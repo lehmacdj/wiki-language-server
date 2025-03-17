@@ -35,6 +35,7 @@ library
       Handlers.TextDocument.Changes
       Handlers.TextDocument.Definition
       Handlers.TextDocument.Formatting
+      LSP.Diagnostics
       LSP.Raw
       LSP.VFS
       Models.Diagnostics

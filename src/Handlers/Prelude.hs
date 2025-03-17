@@ -98,7 +98,7 @@ throwDocumentStateDoesNotParse = do
       }
 
 rootExceptionHandler ::
-  (Logging :> es, IOE :> es, Error (TResponseError method) :> es) =>
+  (Logging :> es, Error (TResponseError method) :> es) =>
   Eff es a ->
   Eff es a
 rootExceptionHandler action =
