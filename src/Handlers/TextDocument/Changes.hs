@@ -1,8 +1,8 @@
 module Handlers.TextDocument.Changes where
 
 import Handlers.Prelude
-import LSP.Diagnostics
 import MyPrelude
+import Utils.Diagnostics
 
 textDocumentDidOpen ::
   (LSP :> es, VFSAccess :> es, Diagnostics :> es) =>

@@ -1,4 +1,4 @@
-module LSP.Diagnostics where
+module Utils.Diagnostics where
 
 import LSP.Raw
 import Language.LSP.Diagnostics

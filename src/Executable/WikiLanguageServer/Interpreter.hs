@@ -1,12 +1,12 @@
 module Executable.WikiLanguageServer.Interpreter where
 
 import Effectful.FileSystem (runFileSystem)
-import LSP.Diagnostics
 import LSP.Raw
 import LSP.VFS
 import Language.LSP.Server
 import Models.WikiLanguageServerConfig
 import MyPrelude
+import Utils.Diagnostics
 import Utils.Logging
 
 type Effects =
