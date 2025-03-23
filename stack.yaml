@@ -46,6 +46,7 @@ extra-deps:
 - effectful-core-2.5.1.0
 # - effectful-plugin-1.1.0.4
 - strict-mutable-base-1.1.0.0
+- fuzzyfind-3.0.2
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

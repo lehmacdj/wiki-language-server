@@ -31,6 +31,13 @@ uriFromMessage ::
   msg -> NormalizedUri
 uriFromMessage = view $ J.params . J.textDocument . J.uri . to toNormalizedUri
 
+positionFromMessage ::
+  ( HasParams msg p,
+    HasPosition p Position
+  ) =>
+  msg -> Position
+positionFromMessage = view $ J.params . J.position
+
 tryGetVfsUriContents ::
   (VFSAccess :> es) =>
   NormalizedUri ->

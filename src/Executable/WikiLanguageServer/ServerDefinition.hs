@@ -4,6 +4,7 @@ import Executable.WikiLanguageServer.Interpreter
 import Handlers.Initialized
 import Handlers.Prelude
 import Handlers.TextDocument.Changes
+import Handlers.TextDocument.Completion
 import Handlers.TextDocument.Definition
 import Handlers.TextDocument.Formatting
 import Language.LSP.Server
@@ -46,7 +47,8 @@ handlers =
       notificationHandler SMethod_TextDocumentDidOpen textDocumentDidOpen,
       notificationHandler SMethod_TextDocumentDidChange textDocumentDidChange,
       requestHandler' SMethod_TextDocumentDefinition textDocumentDefinition,
-      requestHandler' SMethod_TextDocumentFormatting textDocumentFormatting
+      requestHandler' SMethod_TextDocumentFormatting textDocumentFormatting,
+      requestHandler' SMethod_TextDocumentCompletion textDocumentCompletion
     ]
 
 interpretHandler_ ::

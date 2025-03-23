@@ -39,3 +39,6 @@ colOnNextLine (Position line _) (fromIntegral -> col) = Position (line + 1) col
 
 sameLineWithCol :: Position -> Int -> Position
 sameLineWithCol (Position line _) (fromIntegral -> col) = Position line col
+
+rangeFromStartOfLine :: Position -> Range
+rangeFromStartOfLine p = Range (sameLineWithCol p 0) p

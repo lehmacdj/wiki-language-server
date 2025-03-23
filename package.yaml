@@ -41,6 +41,8 @@ dependencies:
 - effectful-th
 - exceptions
 - filepath
+- fuzzy
+# - fuzzyfind alternate fuzzy finding library, maybe worth trying
 - generic-lens
 - lens
 - lsp

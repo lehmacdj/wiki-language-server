@@ -33,6 +33,7 @@ library
       Handlers.Initialized
       Handlers.Prelude
       Handlers.TextDocument.Changes
+      Handlers.TextDocument.Completion
       Handlers.TextDocument.Definition
       Handlers.TextDocument.Formatting
       LSP.Diagnostics
@@ -40,6 +41,7 @@ library
       LSP.VFS
       Models.Diagnostics
       Models.LinkTarget
+      Models.NoteInfo
       Models.Page.Formatting
       Models.Page.GotoDefinition
       Models.Page.Parser
@@ -60,7 +62,6 @@ library
       MyPrelude.RawStrings
       MyPrelude.RestrictedClassyPrelude
       MyPrelude.Testing
-      NoteInfoCache
       Spec
       Utils.Logging
       Utils.LSP
@@ -138,6 +139,7 @@ library
     , effectful-th
     , exceptions
     , filepath
+    , fuzzy
     , generic-lens
     , hspec
     , hspec-expectations
@@ -242,6 +244,7 @@ executable wiki-language-server
     , effectful-th
     , exceptions
     , filepath
+    , fuzzy
     , generic-lens
     , hspec
     , hspec-expectations
@@ -348,6 +351,7 @@ test-suite wiki-language-server-test
     , effectful-th
     , exceptions
     , filepath
+    , fuzzy
     , generic-lens
     , hspec
     , hspec-expectations
