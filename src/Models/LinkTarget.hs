@@ -3,9 +3,10 @@
 module Models.LinkTarget where
 
 import Effectful.FileSystem
-import Language.LSP.Protocol.Types (Uri (Uri))
+import Language.LSP.Protocol.Types (NormalizedUri)
 import Models.Slug qualified as Slug
 import MyPrelude
+import Utils.FilePathUri
 
 -- | TODO: consider adding anchors; then we could also detect anchor links &
 -- add them to getLinkTargetAtPosition
@@ -18,11 +19,11 @@ data LinkTarget
     -- prefixing @file://@ before the path and using Uri instead
     AbsolutePath FilePath
   | -- | Requires a scheme
-    OtherUri Uri
+    OtherUri NormalizedUri
   deriving (Show, Eq, Ord)
 
 -- | Interpret wikilinks as being relative to the working directory
-relativeToWorkingDirectory :: (FileSystem :> es) => LinkTarget -> Eff es Uri
+relativeToWorkingDirectory :: (FileSystem :> es) => LinkTarget -> Eff es NormalizedUri
 relativeToWorkingDirectory link =
   relativeToDir
     <$> getCurrentDirectory
@@ -30,8 +31,8 @@ relativeToWorkingDirectory link =
 
 -- | Given an absolute path to a directory interpret wiki links as being
 -- relative to that directory
-relativeToDir :: FilePath -> LinkTarget -> Uri
+relativeToDir :: FilePath -> LinkTarget -> NormalizedUri
 relativeToDir dir = \case
   Wikilink slug -> Slug.intoUri dir slug
-  AbsolutePath p -> Uri . pack $ "file://" <> p
+  AbsolutePath p -> filepathToNuri p
   OtherUri uri -> uri

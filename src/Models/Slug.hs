@@ -1,14 +1,17 @@
 module Models.Slug where
 
-import Language.LSP.Protocol.Types (NormalizedUri, toNormalizedUri)
+import Language.LSP.Protocol.Types (NormalizedUri, filePathToUri, toNormalizedUri)
 import MyPrelude
-import Models.Diagnostics (Uri (Uri))
+import System.FilePath
 
 intoFilePathRelativeToDir :: FilePath -> Text -> FilePath
 intoFilePathRelativeToDir dir slug = dir <> "/" <> unpack slug <> ".md"
 
-intoUri :: FilePath -> Text -> Uri
-intoUri dir slug = Uri $ "file://" <> pack (intoFilePathRelativeToDir dir slug)
+intoUri :: FilePath -> Text -> NormalizedUri
+intoUri dir slug =
+  toNormalizedUri $ filePathToUri $ intoFilePathRelativeToDir dir slug
 
-intoNormalizedUri :: FilePath -> Text -> NormalizedUri
-intoNormalizedUri dir slug = toNormalizedUri $ intoUri dir slug
+fromMarkdownFilePath :: FilePath -> Maybe Text
+fromMarkdownFilePath fp
+  | takeExtension fp == ".md" = Just $ pack $ dropExtension $ takeFileName fp
+  | otherwise = Nothing

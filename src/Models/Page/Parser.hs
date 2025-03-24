@@ -3,13 +3,13 @@ module Models.Page.Parser where
 import Commonmark
 import Commonmark.Extensions
 import Commonmark.Pandoc
+import Models.Diagnostics
 import MyPrelude
 import Text.Pandoc.Builder qualified as Pandoc
 import Text.Pandoc.Definition
 import Text.Parsec.Error qualified as Parsec
 import Text.Parsec.Pos qualified as Parsec
-import Models.Diagnostics
-import Utils.LSP
+import Utils.RangePosition
 
 parseErrorFromParsec :: Parsec.ParseError -> Diagnostic
 parseErrorFromParsec err =

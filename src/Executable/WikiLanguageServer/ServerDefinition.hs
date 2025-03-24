@@ -8,6 +8,7 @@ import Handlers.TextDocument.Completion
 import Handlers.TextDocument.Definition
 import Handlers.TextDocument.Formatting
 import Language.LSP.Server
+import Models.NoteInfo.CollectIO
 import Models.WikiLanguageServerConfig
 import MyPrelude
 import Paths_wiki_language_server (version)
@@ -52,8 +53,9 @@ handlers =
     ]
 
 interpretHandler_ ::
-  LanguageContextEnv Config -> Eff Effects <~> IO
-interpretHandler_ env = Iso (runEffects env) liftIO
+  (LanguageContextEnv Config, SharedState) -> Eff Effects <~> IO
+interpretHandler_ (env, sharedState) =
+  Iso (runEffects env sharedState) liftIO
 
 serverOptions :: Options
 serverOptions =
@@ -79,7 +81,11 @@ serverDefinition =
       configSection = "wiki-language-server",
       parseConfig = Models.WikiLanguageServerConfig.parseConfig,
       onConfigChange = const $ pure (),
-      doInitialize = \env _ -> pure (Right env),
+      doInitialize = \env _ -> do
+        sharedState <- makeSharedState []
+        noteInfos <- runEffects_ env sharedState collectNoteInfoForAllNotes
+        sharedState' <- makeSharedState noteInfos
+        pure (Right (env, sharedState')),
       staticHandlers = const handlers,
       interpretHandler = interpretHandler_,
       options = serverOptions

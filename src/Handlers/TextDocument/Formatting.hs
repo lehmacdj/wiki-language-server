@@ -13,7 +13,7 @@ pageForSlug ::
   Text -> Eff es (Maybe Pandoc)
 pageForSlug slug = withEarlyReturn do
   currentDirectory <- getCurrentDirectory
-  let uri = toNormalizedUri $ Slug.intoUri currentDirectory slug
+  let uri = Slug.intoUri currentDirectory slug
   (_, mContents) <- tryGetUriContents uri
   contents <- onNothing mContents . returnEarly $ Nothing @Pandoc
   pure . justFromRight $ parseDocument uri contents

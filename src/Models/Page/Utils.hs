@@ -18,6 +18,8 @@ module Models.Page.Utils
 where
 
 import Commonmark.Types (SourcePos, SourceRange (..))
+import Control.Monad.State (get, put)
+import Control.Monad.Trans.State (State, evalState)
 import Language.LSP.Protocol.Lens qualified as J
 import Language.LSP.Protocol.Types (Position (Position), Range (Range))
 import Models.Page.TH
@@ -27,7 +29,7 @@ import Text.Megaparsec.Char qualified as P
 import Text.Megaparsec.Char.Lexer qualified as P
 import Text.Pandoc.Definition
 import Text.Parsec.Pos qualified as Parsec
-import Utils.LSP
+import Utils.RangePosition
 
 type Parser = P.ParsecT Void Text (State String)
 

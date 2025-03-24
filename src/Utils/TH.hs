@@ -4,6 +4,15 @@ module Utils.TH where
 
 import Data.Char (isSpace)
 import Data.Text qualified as T
+import Language.Haskell.TH.Quote
+  ( QuasiQuoter
+      ( QuasiQuoter,
+        quoteDec,
+        quoteExp,
+        quotePat,
+        quoteType
+      ),
+  )
 import MyPrelude
 
 trimQuasiQuotation :: (MonadFail m) => String -> m Text
@@ -41,6 +50,24 @@ trimQuasiQuotation = trim . pack
                   verified = traverse (maybe sameSpacePrefixAsFirst pure) stripped
                in T.unlines <$> verified
       _ -> multiLine
+
+rTrim :: QuasiQuoter
+rTrim =
+  QuasiQuoter
+    { quoteExp = r.quoteExp . unpack <=< trimQuasiQuotation,
+      quotePat = \_ ->
+        fail
+          "illegal raw string QuasiQuote \
+          \(allowed as expression only, used as a pattern)",
+      quoteType = \_ ->
+        fail
+          "illegal raw string QuasiQuote \
+          \(allowed as expression only, used as a type)",
+      quoteDec = \_ ->
+        fail
+          "illegal raw string QuasiQuote \
+          \(allowed as expression only, used as a declaration)"
+    }
 
 spec_trimQuasiQuotation :: Spec
 spec_trimQuasiQuotation = do

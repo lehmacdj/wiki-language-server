@@ -15,7 +15,7 @@ import Language.LSP.VFS
 import Models.Page.Parser qualified as Page
 import MyPrelude
 import Text.Pandoc.Definition (Pandoc)
-import Utils.LSP
+import Utils.FilePathUri as X
 import Utils.Logging as X
 
 type MonadTResponseError method m = MonadError (TResponseError method) m

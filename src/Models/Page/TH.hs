@@ -11,9 +11,9 @@ import Language.Haskell.TH.Quote
         quoteType
       ),
   )
+import Models.Page.Parser qualified as Page
 import MyPrelude
 import Utils.TH
-import Models.Page.Parser qualified as Page
 
 md :: QuasiQuoter
 md =
@@ -24,7 +24,7 @@ md =
       quoteDec = unsupported
     }
   where
-    unsupported = error "unsupported use of QuasiQuoter; only supports Exp context"
+    unsupported _ = fail "unsupported use of QuasiQuoter; only supports Exp context"
     parseAsExp s = do
       t <- trimQuasiQuotation s
       case Page.parse "<QuasiQuoter>" t of

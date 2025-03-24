@@ -57,6 +57,7 @@ dependencies:
 - prettyprinter-ansi-terminal
 - safe-exceptions
 - sqlite-simple
+- strict-mutable-base
 - template-haskell
 - text
 - th-lift-instances

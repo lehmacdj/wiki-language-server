@@ -32,6 +32,8 @@ import Control.Lens as X
     to,
     toListOf,
     view,
+    (%~),
+    (&),
     (.~),
     (^.),
     (^..),
@@ -46,22 +48,11 @@ import Control.Lens as X
     _Nothing,
     _Right,
     _head,
+    _last,
   )
 import Control.Monad as X (MonadFail (fail))
 import Control.Monad.Except as X (ExceptT (..), runExceptT)
 import Control.Monad.Reader.Class as X
-import Control.Monad.State as X
-  ( State,
-    StateT (..),
-    evalState,
-    evalStateT,
-    execState,
-    execStateT,
-    runState,
-    runStateT,
-  )
-import Control.Monad.State.Class as X
-import Control.Monad.Trans.Class as X (MonadTrans (..))
 import Data.Default as X (Default (..))
 import Data.Functor.Contravariant as X (Contravariant (contramap))
 import Data.Generics.Labels ()

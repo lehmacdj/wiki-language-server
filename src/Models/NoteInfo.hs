@@ -1,12 +1,12 @@
 module Models.NoteInfo where
 
-import Language.LSP.Protocol.Types
 import MyPrelude
 
 data NoteInfo = NoteInfo
   { slug :: Text,
     title :: Text
+    -- perhaps want to also keep track of these for efficiency purposes:
     -- uri :: NormalizedUri,
     -- lastUpdated :: UTCTime
   }
-  deriving stock (Generic)
+  deriving stock (Show, Eq, Ord, Generic)

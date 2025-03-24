@@ -5,13 +5,13 @@ module Models.Page.GotoDefinition where
 import Data.Data.Lens (template)
 import Data.Sequence (Seq (Empty, (:<|)))
 import Data.Sequence.Lens (seqOf)
-import Language.LSP.Protocol.Types (Position (Position), Uri (Uri))
+import Language.LSP.Protocol.Types (Position (Position), Uri (Uri), toNormalizedUri)
 import Models.LinkTarget (LinkTarget (OtherUri, Wikilink))
 import Models.Page.TH (md)
 import Models.Page.Utils (attrB, attrI, attrRanges)
 import MyPrelude
 import Text.Pandoc.Definition (Block, Inline (Link), Pandoc (..))
-import Utils.LSP (positionInRange)
+import Utils.RangePosition (positionInRange)
 
 data BI = B Block | I Inline
   deriving (Show, Eq, Ord)
@@ -35,7 +35,7 @@ getLinkTargetAtPosition (Pandoc _meta blocks) p = go . fromList $ map B blocks
             -- TODO: ensure that url is a proper Uri in LSP sense, and possibly
             -- do some doctoring to make it so or otherwise don't return it
             -- as a link target
-            Just . OtherUri . Uri $ url
+            Just . OtherUri . toNormalizedUri . Uri $ url
           _ -> go (seqOf (template . to B <> template . to I) i <> rest)
       | otherwise = go rest
     go (I i :<| rest) = go (seqOf (template . to B <> template . to I) i <> rest)
@@ -63,7 +63,7 @@ spec_getLinkTargetAtPosition = do
   let normalLink p =
         it ("detects normal link at " <> show p)
           $ getLinkTargetAtPosition simpleMarkdown p
-          `shouldBe` Just (OtherUri . Uri $ "https://en.wikipedia.org")
+          `shouldBe` Just (OtherUri . toNormalizedUri . Uri $ "https://en.wikipedia.org")
   normalLink $ Position 2 0
   normalLink $ Position 2 10
   normalLink $ Position 2 11

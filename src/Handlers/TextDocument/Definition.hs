@@ -6,7 +6,7 @@ import Models.LinkTarget
 import Models.Page.GotoDefinition qualified as GotoDefinition
 import Models.Page.Utils qualified as Page
 import MyPrelude
-import Utils.LSP
+import Utils.RangePosition
 
 textDocumentDefinition ::
   (Logging :> es, VFSAccess :> es, FileSystem :> es) =>
@@ -26,9 +26,9 @@ textDocumentDefinition request = withEarlyReturn $ do
   -- We have the target link, now we just need to try to figure out where to
   -- jump within it. We try to compute the location of the first non-heading
   -- paragraph defaulting to the start of the document if we can't find one
-  targetUri <- relativeToWorkingDirectory link
+  targetNuri <- relativeToWorkingDirectory link
+  let targetUri = fromNormalizedUri targetNuri
   let targetLocation p = InL . Definition . InL $ Location targetUri p
-  let targetNuri = toNormalizedUri targetUri
   (_targetNuriVersion, mTargetContents) <- tryGetUriContents targetNuri
   targetContents <-
     onNothing mTargetContents . returnEarly $ targetLocation (atLineCol 0 0)

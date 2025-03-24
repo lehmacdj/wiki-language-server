@@ -38,9 +38,11 @@ library
       Handlers.TextDocument.Formatting
       LSP.Raw
       LSP.VFS
+      Models.Completion
       Models.Diagnostics
       Models.LinkTarget
       Models.NoteInfo
+      Models.NoteInfo.CollectIO
       Models.Page.Formatting
       Models.Page.GotoDefinition
       Models.Page.Parser
@@ -63,8 +65,10 @@ library
       MyPrelude.Testing
       Spec
       Utils.Diagnostics
+      Utils.FilePathUri
       Utils.Logging
-      Utils.LSP
+      Utils.RangePosition
+      Utils.Text
       Utils.TH
       Utils.XdgPaths
   other-modules:
@@ -157,6 +161,7 @@ library
     , quickcheck-instances
     , safe-exceptions
     , sqlite-simple
+    , strict-mutable-base
     , tasty
     , tasty-discover
     , tasty-golden
@@ -262,6 +267,7 @@ executable wiki-language-server
     , quickcheck-instances
     , safe-exceptions
     , sqlite-simple
+    , strict-mutable-base
     , tasty
     , tasty-discover
     , tasty-golden
@@ -369,6 +375,7 @@ test-suite wiki-language-server-test
     , quickcheck-instances
     , safe-exceptions
     , sqlite-simple
+    , strict-mutable-base
     , tasty
     , tasty-discover
     , tasty-golden
