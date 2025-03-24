@@ -53,7 +53,7 @@ renderCompletionForLineNum WikiLinkCompletion {..} =
                 { _detail = Just slug,
                   _description = Nothing
                 },
-          _kind = Just CompletionItemKind_Text,
+          _kind = Just CompletionItemKind_File,
           _tags = Nothing,
           _detail = Just slug,
           _documentation = Nothing, -- TODO: resolve request to get full note text

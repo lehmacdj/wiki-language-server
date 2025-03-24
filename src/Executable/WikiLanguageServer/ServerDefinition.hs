@@ -71,7 +71,8 @@ serverOptions =
             },
       optServerInfo =
         Just
-          $ ServerInfo "wiki-language-server" (Just $ tshow version)
+          $ ServerInfo "wiki-language-server" (Just $ tshow version),
+      optCompletionTriggerCharacters = Just [' ']
     }
 
 serverDefinition :: ServerDefinition Config
