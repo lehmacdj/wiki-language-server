@@ -54,14 +54,23 @@ handlers =
     ]
 
 runEffects ::
-  LanguageContextEnv Config -> EffectfulEnv GlobalEffects -> Eff Effects a -> IO a
-runEffects config effectfulEnv =
+  EffectfulEnv GlobalEffects -> LanguageContextEnv Config -> Eff Effects a -> IO a
+runEffects effectfulEnv config =
   runLSPEffects_ config >>> (`unEff` effectfulEnv)
 
 interpretHandler_ ::
   EffectfulEnv GlobalEffects -> LanguageContextEnv Config -> Eff Effects <~> IO
 interpretHandler_ effectfulEnv env =
-  Iso (runEffects env effectfulEnv) liftIO
+  Iso (runEffects effectfulEnv env) liftIO
+
+doInitialize_ ::
+  LanguageContextEnv Config ->
+  TMessage Method_Initialize ->
+  Eff Effects (Either (TResponseError Method_Initialize) (LanguageContextEnv Config))
+doInitialize_ env _ = do
+  noteInfos <- collectNoteInfoForAllNotes
+  put noteInfos
+  pure (Right env)
 
 serverOptions :: Options
 serverOptions =
@@ -88,11 +97,8 @@ serverDefinition effectfulEnv =
       configSection = "wiki-language-server",
       parseConfig = Models.WikiLanguageServerConfig.parseConfig,
       onConfigChange = const $ pure (),
-      doInitialize = \env _ -> do
-        runEffects env effectfulEnv do
-          noteInfos <- collectNoteInfoForAllNotes
-          put noteInfos
-        pure (Right env),
+      doInitialize = \env msg ->
+        runEffects effectfulEnv env $ doInitialize_ env msg,
       staticHandlers = const handlers,
       interpretHandler = interpretHandler_ effectfulEnv,
       options = serverOptions
