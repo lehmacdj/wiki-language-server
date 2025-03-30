@@ -56,6 +56,7 @@ import Control.Monad.Reader.Class as X
 import Data.Default as X (Default (..))
 import Data.Functor.Contravariant as X (Contravariant (contramap))
 import Data.Generics.Labels ()
+import Data.Kind as X (Type)
 import Data.List.NonEmpty as X (NonEmpty (..))
 import Data.Monoid (Alt (Alt, getAlt))
 import Data.Proxy as X (Proxy (..))

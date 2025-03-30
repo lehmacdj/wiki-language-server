@@ -1,5 +1,6 @@
 module Executable.WikiLanguageServer.ServerDefinition (serverDefinition) where
 
+import Effectful.State.Static.Shared
 import Executable.WikiLanguageServer.Interpreter
 import Handlers.Initialized
 import Handlers.Prelude
@@ -52,10 +53,15 @@ handlers =
       requestHandler' SMethod_TextDocumentCompletion textDocumentCompletion
     ]
 
+runEffects ::
+  LanguageContextEnv Config -> EffectfulEnv GlobalEffects -> Eff Effects a -> IO a
+runEffects config effectfulEnv =
+  runLSPEffects_ config >>> (`unEff` effectfulEnv)
+
 interpretHandler_ ::
-  (LanguageContextEnv Config, SharedState) -> Eff Effects <~> IO
-interpretHandler_ (env, sharedState) =
-  Iso (runEffects env sharedState) liftIO
+  EffectfulEnv GlobalEffects -> LanguageContextEnv Config -> Eff Effects <~> IO
+interpretHandler_ effectfulEnv env =
+  Iso (runEffects env effectfulEnv) liftIO
 
 serverOptions :: Options
 serverOptions =
@@ -75,19 +81,19 @@ serverOptions =
       optCompletionTriggerCharacters = Just [' ']
     }
 
-serverDefinition :: ServerDefinition Config
-serverDefinition =
+serverDefinition :: EffectfulEnv GlobalEffects -> ServerDefinition Config
+serverDefinition effectfulEnv =
   ServerDefinition
     { defaultConfig = def,
       configSection = "wiki-language-server",
       parseConfig = Models.WikiLanguageServerConfig.parseConfig,
       onConfigChange = const $ pure (),
       doInitialize = \env _ -> do
-        sharedState <- makeSharedState []
-        noteInfos <- runEffects_ env sharedState collectNoteInfoForAllNotes
-        sharedState' <- makeSharedState noteInfos
-        pure (Right (env, sharedState')),
+        runEffects env effectfulEnv do
+          noteInfos <- collectNoteInfoForAllNotes
+          put noteInfos
+        pure (Right env),
       staticHandlers = const handlers,
-      interpretHandler = interpretHandler_,
+      interpretHandler = interpretHandler_ effectfulEnv,
       options = serverOptions
     }

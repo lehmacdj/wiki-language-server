@@ -1,6 +1,5 @@
 module Executable.WikiLanguageServer.Interpreter where
 
-import Control.Concurrent.MVar.Strict
 import Effectful.FileSystem (runFileSystem)
 import Effectful.State.Static.Shared
 import LSP.Raw
@@ -12,41 +11,44 @@ import MyPrelude
 import Utils.Diagnostics
 import Utils.Logging
 
-type Effects =
-  [ State [NoteInfo],
-    VFSAccess,
+-- | These effects need to be re-run with the LSP env
+type LSPEffects :: [Effect]
+type LSPEffects =
+  [ VFSAccess,
     Logging,
     Diagnostics,
-    LSP,
-    FileSystem,
+    LSP
+  ]
+
+-- | These effects are available in the global env that we run in main
+type GlobalEffects :: [Effect]
+type GlobalEffects =
+  [ FileSystem,
+    State [NoteInfo],
     IOE
   ]
 
--- | A hack that is necessary because our interpreter needs to be called
--- multiple times for each handle. We run state effects using a concrete MVar
--- and initialize/pass the MVars when calling @doInitialize@.
-newtype SharedState = SharedState
-  { noteInfos :: MVar' [NoteInfo]
-  }
+type family (++) (es :: [k]) (es' :: [k]) :: [k] where
+  '[] ++ es = es
+  (e ': es) ++ es' = e ': (es ++ es')
 
-makeSharedState :: [NoteInfo] -> IO SharedState
-makeSharedState noteInfos = do
-  noteInfos <- newMVar' noteInfos
-  pure $ SharedState {..}
+type Effects :: [Effect]
+type Effects = LSPEffects ++ GlobalEffects
 
-runEffects_ :: LanguageContextEnv Config -> SharedState -> Eff Effects a -> IO a
-runEffects_ config SharedState {..} =
+runLSPEffects_ ::
+  (IOE :> es) =>
+  LanguageContextEnv Config -> Eff (LSPEffects ++ es) a -> Eff es a
+runLSPEffects_ config =
   id -- this is here so >>> can precede all following lines
-    >>> evalStateMVar noteInfos
     >>> runVFSAccess
     >>> runLoggingLSP
     >>> runDiagnostics
     >>> runLSP config
-    >>> runFileSystem
-    >>> runEff
 
-runEffects ::
-  (Subset es Effects) =>
-  LanguageContextEnv Config -> SharedState -> Eff es a -> IO a
-runEffects config sharedState action =
-  runEffects_ config sharedState $ inject action
+runGlobalEffects_ ::
+  Eff GlobalEffects a -> IO a
+runGlobalEffects_ =
+  id -- this is here so >>> can precede all following lines
+    >>> runFileSystem
+    >>> evalState []
+    >>> runEff

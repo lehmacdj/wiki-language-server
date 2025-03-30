@@ -9,12 +9,15 @@ import Data.Text.Encoding (decodeUtf8')
 import Effectful as X
 import Effectful.Dispatch.Dynamic as X
 import Effectful.Dispatch.Static as X
+import Effectful.Dispatch.Static.Primitive
 import Effectful.Error.Static as X
 import Effectful.FileSystem
 import Effectful.FileSystem as X (FileSystem)
 import Effectful.FileSystem.IO.ByteString as X (readFile, writeFile)
 import Effectful.TH as X
 import MyPrelude.RestrictedClassyPrelude
+
+type EffectfulEnv es = Env es
 
 untry :: (Exception e) => Either e a -> Eff es a
 untry = either throwIO pure

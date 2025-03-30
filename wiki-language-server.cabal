@@ -172,6 +172,7 @@ library
     , text
     , th-lift-instances
     , transformers
+    , unliftio
     , xdg-basedir
   default-language: Haskell2010
 
@@ -278,6 +279,7 @@ executable wiki-language-server
     , text
     , th-lift-instances
     , transformers
+    , unliftio
     , wiki-language-server
     , xdg-basedir
   default-language: Haskell2010
@@ -386,6 +388,7 @@ test-suite wiki-language-server-test
     , text
     , th-lift-instances
     , transformers
+    , unliftio
     , wiki-language-server
     , xdg-basedir
   default-language: Haskell2010

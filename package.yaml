@@ -62,6 +62,7 @@ dependencies:
 - text
 - th-lift-instances
 - transformers
+- unliftio
 - xdg-basedir
 # test dependencies, trying to keep these separate even though they are required
 # by the main lib because our tests are in tree.
