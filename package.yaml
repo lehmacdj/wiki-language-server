@@ -41,9 +41,9 @@ dependencies:
 - effectful-th
 - exceptions
 - filepath
-- fuzzy
-# - fuzzyfind alternate fuzzy finding library, maybe worth trying
+- fuzzy # - fuzzyfind alternate fuzzy finding library, maybe worth trying
 - generic-lens
+# - ki-effectful (ki, but for effectful if I want to do actually fancy concurrency things)
 - lens
 - lsp
 - lsp-types
@@ -61,7 +61,9 @@ dependencies:
 - template-haskell
 - text
 - th-lift-instances
+- time
 - transformers
+- unbounded-delays
 - unliftio
 - xdg-basedir
 # test dependencies, trying to keep these separate even though they are required
@@ -105,6 +107,7 @@ default-extensions:
 - NamedFieldPuns
 - NoFieldSelectors
 - NoImplicitPrelude
+- NumericUnderscores
 - OverloadedLabels
 - OverloadedRecordDot
 - OverloadedStrings

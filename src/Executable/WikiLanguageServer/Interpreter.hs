@@ -17,6 +17,7 @@ type LSPEffects =
   [ VFSAccess,
     Logging,
     Diagnostics,
+    Input Config,
     LSP
   ]
 
@@ -25,6 +26,7 @@ type GlobalEffects :: [Effect]
 type GlobalEffects =
   [ FileSystem,
     State [NoteInfo],
+    Concurrent,
     IOE
   ]
 
@@ -43,6 +45,7 @@ runLSPEffects_ config =
     >>> runVFSAccess
     >>> runLoggingLSP
     >>> runDiagnostics
+    >>> runInputViaGetter getConfig
     >>> runLSP config
 
 runGlobalEffects_ ::
@@ -51,4 +54,5 @@ runGlobalEffects_ =
   id -- this is here so >>> can precede all following lines
     >>> runFileSystem
     >>> evalState []
+    >>> runConcurrent
     >>> runEff

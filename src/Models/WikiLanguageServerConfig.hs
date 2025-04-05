@@ -6,8 +6,9 @@ import MyPrelude
 
 -- | This is a config value that can be passed to the server from the client on
 -- initialization.
-newtype Config = Config
-  { maxDiagnostics :: Int
+data Config = Config
+  { maxDiagnostics :: Int,
+    updateNoteCacheTaskDelay :: NominalDiffTime
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
@@ -15,7 +16,8 @@ newtype Config = Config
 instance Default Config where
   def =
     Config
-      { maxDiagnostics = 100
+      { maxDiagnostics = 100,
+        updateNoteCacheTaskDelay = 120
       }
 
 -- TODO: does this need patch like semantics

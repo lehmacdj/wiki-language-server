@@ -13,8 +13,10 @@ import Language.LSP.Protocol.Types as X
 import Language.LSP.Server as X (Handlers, MonadLsp, notificationHandler, requestHandler)
 import Language.LSP.VFS
 import Models.Page.Parser qualified as Page
+import Models.WikiLanguageServerConfig as X
 import MyPrelude
 import Text.Pandoc.Definition (Pandoc)
+import Utils.Diagnostics as X
 import Utils.FilePathUri as X
 import Utils.Logging as X
 

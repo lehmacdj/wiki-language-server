@@ -1,5 +1,6 @@
 module Executable.WikiLanguageServer.ServerDefinition (serverDefinition) where
 
+import BackgroundTasks.UpdateNoteCache
 import Effectful.State.Static.Shared
 import Executable.WikiLanguageServer.Interpreter
 import Handlers.Initialized
@@ -68,8 +69,7 @@ doInitialize_ ::
   TMessage Method_Initialize ->
   Eff Effects (Either (TResponseError Method_Initialize) (LanguageContextEnv Config))
 doInitialize_ env _ = do
-  noteInfos <- collectNoteInfoForAllNotes
-  put noteInfos
+  void . forkIO . void $ updateNoteCacheTask
   pure (Right env)
 
 serverOptions :: Options

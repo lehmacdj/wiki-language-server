@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      BackgroundTasks.UpdateNoteCache
       Executable.WikiLanguageServer
       Executable.WikiLanguageServer.Interpreter
       Executable.WikiLanguageServer.ServerDefinition
@@ -55,6 +56,7 @@ library
       MyPrelude.EarlyReturn.Class
       MyPrelude.Effect
       MyPrelude.Effect.EarlyReturn
+      MyPrelude.Effect.Input
       MyPrelude.ExceptionErrorT
       MyPrelude.MaybeEither
       MyPrelude.Orphans
@@ -103,6 +105,7 @@ library
       NamedFieldPuns
       NoFieldSelectors
       NoImplicitPrelude
+      NumericUnderscores
       OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
@@ -171,7 +174,9 @@ library
     , template-haskell
     , text
     , th-lift-instances
+    , time
     , transformers
+    , unbounded-delays
     , unliftio
     , xdg-basedir
   default-language: Haskell2010
@@ -210,6 +215,7 @@ executable wiki-language-server
       NamedFieldPuns
       NoFieldSelectors
       NoImplicitPrelude
+      NumericUnderscores
       OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
@@ -278,7 +284,9 @@ executable wiki-language-server
     , template-haskell
     , text
     , th-lift-instances
+    , time
     , transformers
+    , unbounded-delays
     , unliftio
     , wiki-language-server
     , xdg-basedir
@@ -319,6 +327,7 @@ test-suite wiki-language-server-test
       NamedFieldPuns
       NoFieldSelectors
       NoImplicitPrelude
+      NumericUnderscores
       OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
@@ -387,7 +396,9 @@ test-suite wiki-language-server-test
     , template-haskell
     , text
     , th-lift-instances
+    , time
     , transformers
+    , unbounded-delays
     , unliftio
     , wiki-language-server
     , xdg-basedir

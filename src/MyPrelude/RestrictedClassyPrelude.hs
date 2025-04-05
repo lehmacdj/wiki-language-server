@@ -4,7 +4,11 @@ module MyPrelude.RestrictedClassyPrelude
 where
 
 import ClassyPrelude as X hiding
-  ( StringException,
+  ( MonadReader (..),
+    Reader,
+    ReaderT (..),
+    StringException,
+    asks,
     bracket,
     bracketOnError,
     bracketOnError_,
@@ -34,6 +38,7 @@ import ClassyPrelude as X hiding
     onException,
     readFile,
     readFileUtf8,
+    runReaderT,
     throwIO,
     throwString,
     throwTo,
