@@ -13,6 +13,23 @@ onNothing = flip (`maybe` pure)
 onNothingM :: (Monad m) => m (Maybe a) -> m a -> m a
 onNothingM action err = action >>= \m -> onNothing m err
 
+-- | execute a computation only if it is Just
+withJust :: (Applicative m) => Maybe a -> (a -> m ()) -> m ()
+withJust (Just x) f = f x
+withJust Nothing _ = pure ()
+
+-- | execute a computation only if it is Just
+whenJust :: (Applicative m) => Maybe a -> m () -> m ()
+whenJust x = withJust x . const
+
+-- | execute a computation only if it is Just
+withJustM :: (Monad m) => m (Maybe a) -> (a -> m ()) -> m ()
+withJustM v action = v >>= (`withJust` action)
+
+-- | execute a computation only if it is Just
+whenJustM :: (Monad m) => m (Maybe a) -> m () -> m ()
+whenJustM v = withJustM v . const
+
 onLeft :: (Applicative m) => Either e a -> (e -> m a) -> m a
 onLeft = flip (`either` pure)
 
