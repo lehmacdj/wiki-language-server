@@ -1,7 +1,6 @@
 module Executable.WikiLanguageServer.ServerDefinition (serverDefinition) where
 
 import BackgroundTasks.UpdateNoteCache
-import Effectful.State.Static.Shared
 import Executable.WikiLanguageServer.Interpreter
 import Handlers.Initialized
 import Handlers.Prelude
@@ -10,7 +9,6 @@ import Handlers.TextDocument.Completion
 import Handlers.TextDocument.Definition
 import Handlers.TextDocument.Formatting
 import Language.LSP.Server
-import Models.NoteInfo.CollectIO
 import Models.WikiLanguageServerConfig
 import MyPrelude
 import Paths_wiki_language_server (version)
