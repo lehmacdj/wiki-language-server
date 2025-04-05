@@ -49,6 +49,7 @@ handlers =
     [ notificationHandler SMethod_Initialized initialized,
       notificationHandler SMethod_TextDocumentDidOpen textDocumentDidOpen,
       notificationHandler SMethod_TextDocumentDidChange textDocumentDidChange,
+      notificationHandler SMethod_TextDocumentDidClose textDocumentDidClose,
       requestHandler' SMethod_TextDocumentDefinition textDocumentDefinition,
       requestHandler' SMethod_TextDocumentFormatting textDocumentFormatting,
       requestHandler' SMethod_TextDocumentCompletion textDocumentCompletion

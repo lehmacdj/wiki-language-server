@@ -25,3 +25,8 @@ textDocumentDidChange notification = withEarlyReturn do
   case parseDocument uri contents of
     Left d -> sendDiagnostics uri (Just version) [d]
     Right _ -> pure ()
+
+textDocumentDidClose ::
+  (LSP :> es, VFSAccess :> es, Diagnostics :> es) =>
+  TNotificationMessage 'Method_TextDocumentDidClose -> Eff es ()
+textDocumentDidClose _ = pure ()
