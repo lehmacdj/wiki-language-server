@@ -4,13 +4,14 @@ import Effectful.FileSystem (getCurrentDirectory)
 import Handlers.Prelude
 import Models.Page.Formatting qualified as Formatting
 import Models.Page.Utils qualified as Page
+import Models.Slug (Slug)
 import Models.Slug qualified as Slug
 import MyPrelude
 import Text.Pandoc.Definition (Pandoc)
 
 pageForSlug ::
   (VFSAccess :> es, Logging :> es, FileSystem :> es) =>
-  Text -> Eff es (Maybe Pandoc)
+  Slug -> Eff es (Maybe Pandoc)
 pageForSlug slug = withEarlyReturn do
   currentDirectory <- getCurrentDirectory
   let uri = Slug.intoUri currentDirectory slug
@@ -22,7 +23,7 @@ pageForSlug slug = withEarlyReturn do
 -- can't find the title in the page
 titleForSlug ::
   (Logging :> es, VFSAccess :> es, FileSystem :> es) =>
-  Text -> Eff es (Maybe Text)
+  Slug -> Eff es (Maybe Text)
 titleForSlug slug = withEarlyReturn do
   mPage <- pageForSlug slug
   page <- onNothing mPage . returnEarly $ Nothing @Text

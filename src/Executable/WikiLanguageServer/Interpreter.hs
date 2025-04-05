@@ -25,7 +25,7 @@ type LSPEffects =
 type GlobalEffects :: [Effect]
 type GlobalEffects =
   [ FileSystem,
-    State [NoteInfo],
+    State NoteInfoCache,
     Concurrent,
     IOE
   ]
@@ -53,6 +53,6 @@ runGlobalEffects_ ::
 runGlobalEffects_ =
   id -- this is here so >>> can precede all following lines
     >>> runFileSystem
-    >>> evalState []
+    >>> evalState mempty
     >>> runConcurrent
     >>> runEff

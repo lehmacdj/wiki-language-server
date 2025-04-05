@@ -5,23 +5,14 @@ import Handlers.Prelude
 import Models.Completion
 import Models.NoteInfo
 import MyPrelude
-import Utils.Diagnostics
 import Utils.RangePosition
-
-mockCompletionsCache :: [NoteInfo]
-mockCompletionsCache =
-  [ NoteInfo "kWp7rk0suUXd" "Hello world",
-    NoteInfo "7Fu2PSiqrvz4" "Test world",
-    NoteInfo "JQiVd3GmGPpP" "Some string",
-    NoteInfo "acZlsJzsFs2g" "A wild unordinary herald"
-  ]
 
 textDocumentCompletion ::
   ( VFSAccess :> es,
     Logging :> es,
     FileSystem :> es,
     Diagnostics :> es,
-    State [NoteInfo] :> es
+    State NoteInfoCache :> es
   ) =>
   HandlerFor 'Method_TextDocumentCompletion es
 textDocumentCompletion request = do

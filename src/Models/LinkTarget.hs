@@ -4,6 +4,7 @@ module Models.LinkTarget where
 
 import Effectful.FileSystem
 import Language.LSP.Protocol.Types (NormalizedUri)
+import Models.Slug (Slug)
 import Models.Slug qualified as Slug
 import MyPrelude
 import Utils.FilePathUri
@@ -14,7 +15,7 @@ data LinkTarget
   = -- | A slug, to be used in creating a wikilink. Most often this will be
     -- interpreted as relative to some directory and suffixed with ".md", but in
     -- theory it is possible to have a more clever strategy of interpreting this
-    Wikilink Text
+    Wikilink Slug
   | -- | An absolute filepath on the current machines filesystem. Equivalent to
     -- prefixing @file://@ before the path and using Uri instead
     AbsolutePath FilePath

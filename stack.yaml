@@ -47,6 +47,11 @@ extra-deps:
 # - effectful-plugin-1.1.0.4
 - strict-mutable-base-1.1.0.0
 - fuzzyfind-3.0.2
+- ixset-typed-0.5.1.0
+# - git: https://github.com/sumo/ixset.git
+#   commit: e95a2d46ac72afb47ddb9727a7130f1e74d839d6
+# - git: https://github.com/sumo/syb-with-class
+#   commit: f67a776a4f7e8fe69ec0df35e953bd9422bb05b4
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

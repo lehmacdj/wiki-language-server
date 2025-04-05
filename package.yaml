@@ -44,6 +44,7 @@ dependencies:
 - fuzzy # - fuzzyfind alternate fuzzy finding library, maybe worth trying
 - generic-lens
 # - ki-effectful (ki, but for effectful if I want to do actually fancy concurrency things)
+- ixset-typed
 - lens
 - lsp
 - lsp-types

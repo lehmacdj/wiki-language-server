@@ -16,6 +16,7 @@ where
 import Language.LSP.Protocol.Types
 import Models.Page.TH
 import Models.Page.Utils (attrRanges)
+import Models.Slug (Slug (..))
 import MyPrelude
 import Text.Pandoc.Definition
 import Text.Pandoc.Walk (query)
@@ -25,7 +26,7 @@ data FormattingOperation
     -- a link like @<!--wls-->[[random-id|Note title]]@.
     WikilinkTransclusion
     { -- | The slug of the note the title of which should be transcluded
-      slug :: Text,
+      slug :: Slug,
       -- | Range to replace with the link to the note
       linkReplaceRange :: Range,
       -- | Range to replace with a marker noting that this link is transcluded
@@ -64,7 +65,7 @@ editsForPage = query transcludeNoteTitles
     transcludeNoteTitles = \case
       -- if the link has a marker we rewrite it
       PositionedLink lr _ slug : Positioned mr WlsTranscluded : rest ->
-        WikilinkTransclusion slug lr mr : transcludeNoteTitles rest
+        WikilinkTransclusion (Slug slug) lr mr : transcludeNoteTitles rest
       -- if the link has contents which are simply the slug we rewrite it
       PositionedLink lr@(Range _ markerPos) [Str contents] slug : rest
         | contents == slug ->
@@ -72,7 +73,7 @@ editsForPage = query transcludeNoteTitles
             -- located 1 character past the last character that comprises the
             -- link because otherwise it would disrupt the link syntax
             let mr = Range markerPos markerPos
-             in WikilinkTransclusion slug lr mr : transcludeNoteTitles rest
+             in WikilinkTransclusion (Slug slug) lr mr : transcludeNoteTitles rest
       -- otherwise there is nothing to do
       [] -> []
       _ : rest -> transcludeNoteTitles rest
@@ -87,7 +88,7 @@ spec_editsForPage = do
   singleOperation
     "replaces link without contents"
     ( WikilinkTransclusion
-        "asdf"
+        (Slug "asdf")
         (Range start (Position 0 8))
         (Range (Position 0 8) (Position 0 8))
     )
@@ -100,7 +101,7 @@ spec_editsForPage = do
   singleOperation
     "explicit same title is same as no title (somewhat unfortunately)"
     ( WikilinkTransclusion
-        "asdf"
+        (Slug "asdf")
         (Range start (Position 0 13))
         (Range (Position 0 13) (Position 0 13))
     )
@@ -108,7 +109,7 @@ spec_editsForPage = do
   singleOperation
     "replaces link with marker unconditionally"
     ( WikilinkTransclusion
-        "asdf"
+        (Slug "asdf")
         (Range start (Position 0 14))
         (Range (Position 0 14) (Position 0 24))
     )
@@ -116,7 +117,7 @@ spec_editsForPage = do
   singleOperation
     "also replaces link with marker without alternate title"
     ( WikilinkTransclusion
-        "asdf"
+        (Slug "asdf")
         (Range start (Position 0 8))
         (Range (Position 0 8) (Position 0 18))
     )
@@ -135,7 +136,7 @@ textEditOfOperation ::
   (Monad m) =>
   -- | function that gets the title to use for the slug, if it returns Nothing
   -- no edit is produced for the formatting operation
-  (Text -> m (Maybe Text)) ->
+  (Slug -> m (Maybe Text)) ->
   FormattingOperation ->
   m [TextEdit]
 textEditOfOperation resolveSlugTitle = \case
@@ -143,7 +144,7 @@ textEditOfOperation resolveSlugTitle = \case
     m_title <- resolveSlugTitle slug
     fmap concat <$> for (toList m_title) $ \title ->
       pure
-        [ TextEdit lr $ "[[" <> slug <> "|" <> title <> "]]",
+        [ TextEdit lr $ "[[" <> slug.text <> "|" <> title <> "]]",
           TextEdit mr WlsTranscludedMarker
         ]
 
@@ -151,7 +152,7 @@ spec_textEditOfOperation :: Spec
 spec_textEditOfOperation = do
   let wikilinkTransclusion =
         WikilinkTransclusion
-          "asdf"
+          (Slug "asdf")
           (Range (Position 0 0) (Position 0 14))
           (Range (Position 0 14) (Position 0 36))
   describe "WikilinkTransclusion" $ do

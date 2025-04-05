@@ -150,6 +150,7 @@ library
     , generic-lens
     , hspec
     , hspec-expectations
+    , ixset-typed
     , lens
     , lsp
     , lsp-types
@@ -260,6 +261,7 @@ executable wiki-language-server
     , generic-lens
     , hspec
     , hspec-expectations
+    , ixset-typed
     , lens
     , lsp
     , lsp-types
@@ -372,6 +374,7 @@ test-suite wiki-language-server-test
     , generic-lens
     , hspec
     , hspec-expectations
+    , ixset-typed
     , lens
     , lsp
     , lsp-types

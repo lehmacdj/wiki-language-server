@@ -13,7 +13,7 @@ updateNoteCacheTask ::
     FileSystem :> es,
     Input Config :> es,
     Diagnostics :> es,
-    State [NoteInfo] :> es
+    State NoteInfoCache :> es
   ) =>
   Eff es Void
 updateNoteCacheTask = forever do

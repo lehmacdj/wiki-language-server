@@ -3,6 +3,7 @@ module Models.Completion where
 import Data.Text (breakOn)
 import Language.LSP.Protocol.Types
 import Models.NoteInfo
+import Models.Slug
 import MyPrelude
 import Text.Fuzzy (Fuzzy (Fuzzy))
 import Text.Fuzzy qualified as Fuzzy
@@ -12,14 +13,14 @@ import Utils.Text
 data Completion
   = WikiLinkCompletion
   { replaceRange :: Range,
-    slug :: Text,
+    slug :: Slug,
     title :: Text,
     label :: Text,
     typedAlias :: Text
   }
   deriving (Show, Eq, Generic)
 
-makeWikiLinkCompletionsFromLine :: [NoteInfo] -> Position -> Text -> [Completion]
+makeWikiLinkCompletionsFromLine :: NoteInfoCache -> Position -> Text -> [Completion]
 makeWikiLinkCompletionsFromLine noteInfos position line = withEarlyReturn_ do
   let reversed = reverse line
       (reversedPrefix, reversedRest) = breakOn "[[" reversed
@@ -28,19 +29,19 @@ makeWikiLinkCompletionsFromLine noteInfos position line = withEarlyReturn_ do
       (start, end) = breakOn "|" prefix
       completionPrefix = if null end then start else end
   pure
-    $ Fuzzy.filter completionPrefix noteInfos "" "" (.title) False
+    $ Fuzzy.filter completionPrefix (toList noteInfos) "" "" (.title) False
     <&> \(Fuzzy NoteInfo {..} _ _) ->
       WikiLinkCompletion
         { replaceRange = Range (sameLineWithCol position (length reversedRest)) position,
           slug,
           title,
-          label = title ++ " (" ++ slug ++ ")",
+          label = title ++ " (" ++ slug.text ++ ")",
           typedAlias = prefix
         }
 
 renderCompletionForLineNum :: Completion -> [CompletionItem]
 renderCompletionForLineNum WikiLinkCompletion {..} =
-  [ TextEdit replaceRange $ slug ++ "|" ++ title ++ "]]<!--wls-->"
+  [ TextEdit replaceRange $ slug.text ++ "|" ++ title ++ "]]<!--wls-->"
   -- Somewhat appealing to expose such a completion too:
   -- TextEdit replaceRange $ "[[" ++ slug ++ "|" ++ typedAlias ++ "]]"
   ]
@@ -50,12 +51,12 @@ renderCompletionForLineNum WikiLinkCompletion {..} =
           _labelDetails =
             Just
               CompletionItemLabelDetails
-                { _detail = Just slug,
+                { _detail = Just slug.text,
                   _description = Nothing
                 },
           _kind = Just CompletionItemKind_File,
           _tags = Nothing,
-          _detail = Just slug,
+          _detail = Just slug.text,
           _documentation = Nothing, -- TODO: resolve request to get full note text
           _deprecated = Nothing,
           _preselect = Nothing,

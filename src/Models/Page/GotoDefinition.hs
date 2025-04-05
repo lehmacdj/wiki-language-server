@@ -9,6 +9,7 @@ import Language.LSP.Protocol.Types (Position (Position), Uri (Uri), toNormalized
 import Models.LinkTarget (LinkTarget (OtherUri, Wikilink))
 import Models.Page.TH (md)
 import Models.Page.Utils (attrB, attrI, attrRanges)
+import Models.Slug (Slug (..))
 import MyPrelude
 import Text.Pandoc.Definition (Block, Inline (Link), Pandoc (..))
 import Utils.RangePosition (positionInRange)
@@ -30,7 +31,7 @@ getLinkTargetAtPosition (Pandoc _meta blocks) p = go . fromList $ map B blocks
           Link _ _ (slug, "wikilink") ->
             -- interpret wiki links as relative to the current file as determined
             -- by the position
-            Just $ Wikilink slug
+            Just $ Wikilink $ Slug slug
           Link _ _ (url, _) ->
             -- TODO: ensure that url is a proper Uri in LSP sense, and possibly
             -- do some doctoring to make it so or otherwise don't return it
@@ -53,7 +54,7 @@ spec_getLinkTargetAtPosition = do
   let wikilink p =
         it ("detects wiki link at " <> show p)
           $ getLinkTargetAtPosition simpleMarkdown p
-          `shouldBe` Just (Wikilink "test")
+          `shouldBe` Just (Wikilink (Slug "test"))
   wikilink $ Position 1 0
   wikilink $ Position 1 2
   wikilink $ Position 1 5
