@@ -10,6 +10,10 @@ import Text.Fuzzy qualified as Fuzzy
 import Utils.RangePosition
 import Utils.Text
 
+-- | Extra characters that the client should trigger completion on
+extraCompletionCharacters :: [Char]
+extraCompletionCharacters = ['[', '|', ' ', '-']
+
 data Completion
   = WikiLinkCompletion
   { replaceRange :: Range,

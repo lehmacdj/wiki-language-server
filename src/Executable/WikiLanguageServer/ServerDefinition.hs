@@ -9,6 +9,7 @@ import Handlers.TextDocument.Completion
 import Handlers.TextDocument.Definition
 import Handlers.TextDocument.Formatting
 import Language.LSP.Server
+import Models.Completion (extraCompletionCharacters)
 import Models.WikiLanguageServerConfig
 import MyPrelude
 import Paths_wiki_language_server (version)
@@ -86,7 +87,7 @@ serverOptions =
       optServerInfo =
         Just
           $ ServerInfo "wiki-language-server" (Just $ tshow version),
-      optCompletionTriggerCharacters = Just [' ']
+      optCompletionTriggerCharacters = Just extraCompletionCharacters
     }
 
 serverDefinition :: EffectfulEnv GlobalEffects -> ServerDefinition Config
