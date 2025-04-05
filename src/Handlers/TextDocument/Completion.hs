@@ -18,7 +18,9 @@ textDocumentCompletion ::
 textDocumentCompletion request = do
   let uri = uriFromMessage request
   let position = positionFromMessage request
-  line <- getVirtualFileRange uri (rangeFromStartOfLine position) `onNothingM` throwNoContentsAvailable
+  line <-
+    getVirtualFileRange uri (rangeFromStartOfLine position)
+      `onNothingM` throwNoContentsAvailable
   noteInfos <- get
   let completions = makeWikiLinkCompletionsFromLine noteInfos position line
   let result =
