@@ -39,6 +39,8 @@ makeWikiLinkCompletionsFromLine noteInfos position line = withEarlyReturn_ do
   when (null rest) $ returnEarly [] -- there is no `[[` in the line
   let (start, end) = breakOn "|" completionContext
       searchPrefix = if null end then start else end
+  -- completions aren't useful when the searchPrefix is empty
+  when (null searchPrefix) $ returnEarly []
   pure
     $ Fuzzy.filter searchPrefix (toList noteInfos) "" "" (.title) False
     <&> \(Fuzzy NoteInfo {..} _ _) ->
@@ -85,7 +87,7 @@ renderCompletionForLineNum completion@WikiLinkCompletion {..} =
        }
 
 extractOriginalCompletion :: CompletionItem -> Either Text Completion
-extractOriginalCompletion = 
+extractOriginalCompletion =
   fromJSON <=< (maybe (Left "missing data value") Right . (._data_))
 
 spec_makeWikiLinkCompletionsFromLine :: Spec
