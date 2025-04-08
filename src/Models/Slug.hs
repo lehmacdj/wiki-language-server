@@ -6,6 +6,7 @@ import System.FilePath
 
 newtype Slug = Slug {text :: Text}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (FromJSON, ToJSON) via FastGenericEncoding Slug
 
 intoFilePathRelativeToDir :: FilePath -> Text -> FilePath
 intoFilePathRelativeToDir dir slug = dir <> "/" <> unpack slug <> ".md"

@@ -51,7 +51,8 @@ handlers =
       notificationHandler SMethod_TextDocumentDidClose textDocumentDidClose,
       requestHandler' SMethod_TextDocumentDefinition textDocumentDefinition,
       requestHandler' SMethod_TextDocumentFormatting textDocumentFormatting,
-      requestHandler' SMethod_TextDocumentCompletion textDocumentCompletion
+      requestHandler' SMethod_TextDocumentCompletion textDocumentCompletion,
+      requestHandler' SMethod_CompletionItemResolve completionItemResolve
     ]
 
 runEffects ::

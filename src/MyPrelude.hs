@@ -10,6 +10,7 @@ where
 import Control.Arrow as X (left, right, (<<<), (>>>))
 import Control.Lens as X
   ( Fold,
+    (?~),
     Getter,
     Lens,
     Lens',
@@ -72,6 +73,7 @@ import MyPrelude.Orphans ()
 import MyPrelude.RawStrings as X
 import MyPrelude.RestrictedClassyPrelude as X
 import MyPrelude.Testing as X
+import MyPrelude.JSON as X
 
 -- | Branch over a 'Foldable' collection of values using the supplied
 --   action.

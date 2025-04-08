@@ -1,6 +1,5 @@
 module Models.WikiLanguageServerConfig where
 
-import Data.Aeson
 import Data.Aeson.KeyMap qualified as KeyMap
 import MyPrelude
 
@@ -24,6 +23,4 @@ instance Default Config where
 parseConfig :: Config -> Value -> Either Text Config
 parseConfig _old Null = Right def
 parseConfig _old (Object km) | KeyMap.null km = Right def
-parseConfig _old v = case fromJSON v of
-  Error e -> Left $ pack e
-  Success new -> Right new
+parseConfig _old v = fromJSON v

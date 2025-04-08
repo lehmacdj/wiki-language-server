@@ -58,6 +58,7 @@ library
       MyPrelude.Effect.EarlyReturn
       MyPrelude.Effect.Input
       MyPrelude.ExceptionErrorT
+      MyPrelude.JSON
       MyPrelude.MaybeEither
       MyPrelude.Orphans
       MyPrelude.Orphans.LspTypes

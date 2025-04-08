@@ -23,6 +23,7 @@ data Completion
     typedAlias :: Text
   }
   deriving (Show, Eq, Generic)
+  deriving (ToJSON, FromJSON) via FastGenericEncoding Completion
 
 wikiLinkCompletion :: Range -> Slug -> Text -> Text -> Completion
 wikiLinkCompletion replaceRange slug title typedAlias =
@@ -50,7 +51,7 @@ makeWikiLinkCompletionsFromLine noteInfos position line = withEarlyReturn_ do
         }
 
 renderCompletionForLineNum :: Completion -> [CompletionItem]
-renderCompletionForLineNum WikiLinkCompletion {..} =
+renderCompletionForLineNum completion@WikiLinkCompletion {..} =
   [ TextEdit replaceRange $ slug.text ++ "|" ++ title ++ "]]<!--wls-->"
   -- Somewhat appealing to expose such a completion too:
   -- TextEdit replaceRange $ "[[" ++ slug ++ "|" ++ typedAlias ++ "]]"
@@ -66,8 +67,8 @@ renderCompletionForLineNum WikiLinkCompletion {..} =
                 },
           _kind = Just CompletionItemKind_File,
           _tags = Nothing,
-          _detail = Just slug.text,
-          _documentation = Nothing, -- TODO: resolve request to get full note text
+          _detail = Nothing,
+          _documentation = Nothing,
           _deprecated = Nothing,
           _preselect = Nothing,
           _sortText = Just title,
@@ -80,8 +81,12 @@ renderCompletionForLineNum WikiLinkCompletion {..} =
           _additionalTextEdits = Nothing,
           _commitCharacters = Nothing,
           _command = Nothing,
-          _data_ = Nothing
-        }
+          _data_ = Just (toJSON completion)
+       }
+
+extractOriginalCompletion :: CompletionItem -> Either Text Completion
+extractOriginalCompletion = 
+  fromJSON <=< (maybe (Left "missing data value") Right . (._data_))
 
 spec_makeWikiLinkCompletionsFromLine :: Spec
 spec_makeWikiLinkCompletionsFromLine = do
