@@ -57,9 +57,15 @@ restrictToRange
       (Position (fromIntegral -> le) (fromIntegral -> ce))
     ) =
     let relevantLines = take (le - ls + 1) $ drop ls $ lines text
+        amountToTakeFromLastLine
+          | ls == le = ce - cs
+          | le - ls + 1 > length relevantLines = maxBound
+          | otherwise = ce
+        endsWithNewline = "\n" `isSuffixOf` text
      in relevantLines
           & (_head %~ drop cs)
-          & (_last %~ take (if ls == le then ce - cs else ce))
+          & (_last %~ if endsWithNewline then (++ "\n") else id)
+          & (_last %~ take amountToTakeFromLastLine)
           & intercalate "\n"
 
 pattern P :: Int -> Int -> Position
@@ -89,3 +95,6 @@ spec_restrictToRange = do
   R (P 1 0) (P 2 4) `restrictsMultilineSampleTo` "It is multiple lines.\nThis"
   R (P 0 5) (P 1 2) `restrictsMultilineSampleTo` "sample text.\nIt"
   R (P 0 5) (P 2 4) `restrictsMultilineSampleTo` "sample text.\nIt is multiple lines.\nThis"
+  R (P 0 0) (P 3 0) `restrictsMultilineSampleTo` multilineSample
+  -- any end beyond the end of the text should include everything
+  R (P 0 0) (P 10 0) `restrictsMultilineSampleTo` multilineSample
