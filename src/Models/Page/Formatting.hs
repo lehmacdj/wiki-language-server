@@ -36,6 +36,15 @@ data FormattingOperation
       -- manually when they want to.
       markerReplaceRange :: Range
     }
+  | -- | Represents an operation that aligns a markdown table's columns
+    -- by padding cells with spaces to make columns visually aligned.
+    -- TODO: expand out the Table constructor's arguments to only include stuff
+    TableAlignment
+    { -- | Range of the table to replace
+      tableRange :: Range,
+      -- | The table AST to format
+      table :: Block
+    }
   deriving (Show, Eq, Ord)
 
 pattern WlsTranscludedMarker :: Text
@@ -54,7 +63,7 @@ pattern PositionedLink range x slug <-
   Link (attrRanges -> Just [range]) x (slug, "wikilink")
 
 editsForPage :: Pandoc -> [FormattingOperation]
-editsForPage = query transcludeNoteTitles
+editsForPage = query transcludeNoteTitles <> query alignTables
   where
     -- this traverses [Inline] instead of Inline so that we can do the slightly
     -- context dependent thing of looking for a RawInline that contains the
@@ -62,6 +71,7 @@ editsForPage = query transcludeNoteTitles
     --
     -- N.B. There is a lot of pattern matching that would be very long here, so
     -- I'm using PatternSynonyms to keep it more readable.
+    transcludeNoteTitles :: [Inline] -> [FormattingOperation]
     transcludeNoteTitles = \case
       -- if the link has a marker we rewrite it
       PositionedLink lr _ slug : Positioned mr WlsTranscluded : rest ->
@@ -78,6 +88,14 @@ editsForPage = query transcludeNoteTitles
       [] -> []
       _ : rest -> transcludeNoteTitles rest
 
+    alignTable :: Block -> [FormattingOperation]
+    alignTable = \case
+      Table attr caption colSpecs thead tbody tfoot ->
+        case attrRanges attr of
+          Just [range] -> [TableAlignment range (Table attr caption colSpecs thead tbody tfoot)]
+          _ -> []
+      _ -> []
+
 spec_editsForPage :: Spec
 spec_editsForPage = do
   let singleOperation n fo p =
@@ -85,7 +103,7 @@ spec_editsForPage = do
   let noOperations n p =
         it n $ editsForPage p `shouldBe` []
   let start = Position 0 0
-  singleOperation
+ singleOperation
     "replaces link without contents"
     ( WikilinkTransclusion
         (Slug "asdf")
@@ -132,6 +150,27 @@ spec_editsForPage = do
     "doesn't replace with modified text with misplaced marker"
     [md|<!--wls-->[[asdf|Hello]]|]
 
+  singleOperation
+    "detects simple tables"
+    (TableAlignment
+      (Range (Position 0 0) (Position 2 24))
+      (Table nullAttr (Caption Nothing []) [(AlignDefault, ColWidthDefault), (AlignDefault, ColWidthDefault)] (TableHead nullAttr [Row nullAttr [Cell nullAttr AlignDefault (RowSpan 1) (ColSpan 1) [Plain [Str "Header", Space, Str "1"]], 
+                                             Cell nullAttr AlignDefault (RowSpan 1) (ColSpan 1) [Plain [Str "Header", Space, Str "2"]]]])
+      [TableBody nullAttr (RowHeadColumns 0) [] [Row nullAttr [Cell nullAttr AlignDefault (RowSpan 1) (ColSpan 1) [Plain [Str "Cell", Space, Str "1"]], 
+                                                                    Cell nullAttr AlignDefault (RowSpan 1) (ColSpan 1) [Plain [Str "Cell", Space, Str "2"]]]]]
+      (TableFoot nullAttr [])))
+    [md|
+      | Header 1 | Header 2 |
+      |-|-|
+      | Cell 1 | Cell 2 |
+    |]
+  noOperations
+    "doesn't detect non-table content as a table"
+    [md|
+      This is just regular text.
+      No tables here.
+    |]
+
 textEditOfOperation ::
   (Monad m) =>
   -- | function that gets the title to use for the slug, if it returns Nothing
@@ -147,6 +186,9 @@ textEditOfOperation resolveSlugTitle = \case
         [ TextEdit lr $ "[[" <> slug.text <> "|" <> title <> "]]",
           TextEdit mr WlsTranscludedMarker
         ]
+  TableAlignment tableRange (Table _ _ colSpecs thead tbody tfoot) ->
+    pure [TextEdit tableRange (formatTable colSpecs thead tbody tfoot)]
+  TableAlignment _ _ -> pure [] -- This case shouldn't happen but let's be safe
 
 spec_textEditOfOperation :: Spec
 spec_textEditOfOperation = do
@@ -169,3 +211,21 @@ spec_textEditOfOperation = do
         (const (pure Nothing))
         wikilinkTransclusion
       `shouldBe` Identity []
+
+  describe "TableAlignment" $ do
+    it "formats a simple table correctly" $ do
+      let tableBlock = Table 
+            nullAttr 
+            (Caption Nothing []) 
+            [(AlignDefault, ColWidthDefault), (AlignDefault, ColWidthDefault)]
+            (TableHead nullAttr [Row nullAttr [Cell nullAttr AlignDefault (RowSpan 1) (ColSpan 1) [Plain [Str "Header", Space, Str "1"]], 
+                                               Cell nullAttr AlignDefault (RowSpan 1) (ColSpan 1) [Plain [Str "Header", Space, Str "2"]]]])
+            [TableBody nullAttr (RowHeadColumns 0) [] [Row nullAttr [Cell nullAttr AlignDefault (RowSpan 1) (ColSpan 1) [Plain [Str "Cell", Space, Str "1"]], 
+                                                                      Cell nullAttr AlignDefault (RowSpan 1) (ColSpan 1) [Plain [Str "Cell", Space, Str "2"]]]]]
+            (TableFoot nullAttr [])
+      let tableOp = TableAlignment (Range (Position 0 0) (Position 2 24)) tableBlock
+      let result = textEditOfOperation (const (pure Nothing)) tableOp
+      result `shouldBe` Identity 
+        [ TextEdit (Range (Position 0 0) (Position 2 24)) 
+            "| Header 1 | Header 2 |\n| -------- | -------- |\n| Cell 1   | Cell 2   |\n"
+        ]
