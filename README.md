@@ -13,6 +13,7 @@ Currently supports:
 
 MVP features (this will be a moving target, and mostly is a smaller list to keep
 me focused on what I'm working on/thinking about right now):
+- Note creation / actions to create notes from visual selections (i.e. completely replace neuron.vim)
 
 Aspires to eventually support at least:
 - Vim Plugin Features:
