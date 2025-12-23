@@ -156,16 +156,16 @@ spec_textEditOfOperation = do
           (Range (Position 0 0) (Position 0 14))
           (Range (Position 0 14) (Position 0 36))
   describe "WikilinkTransclusion" $ do
-    it "returns a text edit when title is findable"
-      $ textEditOfOperation
+    it "returns a text edit when title is findable" $
+      textEditOfOperation
         (const (pure (Just "Some Title")))
         wikilinkTransclusion
-      `shouldBe` Identity
-        [ TextEdit (Range (Position 0 0) (Position 0 14)) "[[asdf|Some Title]]",
-          TextEdit (Range (Position 0 14) (Position 0 36)) WlsTranscludedMarker
-        ]
-    it "doens't return anything when finding a title fails"
-      $ textEditOfOperation
+        `shouldBe` Identity
+          [ TextEdit (Range (Position 0 0) (Position 0 14)) "[[asdf|Some Title]]",
+            TextEdit (Range (Position 0 14) (Position 0 36)) WlsTranscludedMarker
+          ]
+    it "doens't return anything when finding a title fails" $
+      textEditOfOperation
         (const (pure Nothing))
         wikilinkTransclusion
-      `shouldBe` Identity []
+        `shouldBe` Identity []

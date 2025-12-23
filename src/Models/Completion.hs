@@ -41,16 +41,26 @@ makeWikiLinkCompletionsFromLine noteInfos position line = withEarlyReturn_ do
       searchPrefix = if null end then start else end
   -- completions aren't useful when the searchPrefix is empty
   when (null searchPrefix) $ returnEarly []
-  pure
-    $ Fuzzy.filter searchPrefix (toList noteInfos) "" "" (.title) False
-    <&> \(Fuzzy NoteInfo {..} _ _) ->
-      WikiLinkCompletion
-        { replaceRange = Range (sameLineWithCol position (length rest)) position,
-          slug,
-          title,
-          label = title ++ " (" ++ slug.text ++ ")",
-          typedAlias = completionContext
-        }
+  pure $
+    Fuzzy.filter searchPrefix (toList noteInfos) "" "" (.title) False
+      <&> \(Fuzzy NoteInfo {..} _ _) ->
+        WikiLinkCompletion
+          { replaceRange = Range (sameLineWithCol position (length rest)) position,
+            slug,
+            title,
+            label = title ++ " (" ++ slug.text ++ ")",
+            typedAlias = completionContext
+          }
+  pure $
+    Fuzzy.filter searchPrefix (toList noteInfos) "" "" (.title) False
+      <&> \(Fuzzy NoteInfo {..} _ _) ->
+        WikiLinkCompletion
+          { replaceRange = Range (sameLineWithCol position (length rest)) position,
+            slug,
+            title,
+            label = title ++ " (" ++ slug.text ++ ")",
+            typedAlias = completionContext
+          }
 
 renderCompletionForLineNum :: Completion -> [CompletionItem]
 renderCompletionForLineNum completion@WikiLinkCompletion {..} =
@@ -84,7 +94,7 @@ renderCompletionForLineNum completion@WikiLinkCompletion {..} =
           _commitCharacters = Nothing,
           _command = Nothing,
           _data_ = Just (toJSON completion)
-       }
+        }
 
 extractOriginalCompletion :: CompletionItem -> Either Text Completion
 extractOriginalCompletion =
@@ -92,21 +102,21 @@ extractOriginalCompletion =
 
 spec_makeWikiLinkCompletionsFromLine :: Spec
 spec_makeWikiLinkCompletionsFromLine = do
-  it "returns completions when there is a fuzzy match"
-    $ makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 7) "[[Hello"
-    `shouldBe` [wikiLinkCompletion (Range (P 0 2) (P 0 7)) (Slug "kWp7rk0suUXd") "Hello world" "Hello"]
-  it "doesn't return completions when no [["
-    $ makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 5) "Hello"
-    `shouldBe` []
-  it "returns all matching completions sorted in a reasonable order"
-    $ makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 7) "[[world"
-    `shouldBe` [ wikiLinkCompletion (Range (P 0 2) (P 0 7)) (Slug "7Fu2PSiqrvz4") "Test world" "world",
-                 wikiLinkCompletion (Range (P 0 2) (P 0 7)) (Slug "kWp7rk0suUXd") "Hello world" "world",
-                 wikiLinkCompletion (Range (P 0 2) (P 0 7)) (Slug "acZlsJzsFs2g") "A wild unordinary herald" "world"
-               ]
-  it "doesn't complete when there is a complete wiki link earlier in the line but no [["
-    $ makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 28) "[[7Fu2PSiqrvz4|Hello]] world"
-    `shouldBe` []
-  it "is not confused by a second wikilink on the same line"
-    $ makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 30) "[[7Fu2PSiqrvz4|Hello]] [[Hello"
-    `shouldBe` [wikiLinkCompletion (Range (P 0 25) (P 0 30)) (Slug "kWp7rk0suUXd") "Hello world" "Hello"]
+  it "returns completions when there is a fuzzy match" $
+    makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 7) "[[Hello"
+      `shouldBe` [wikiLinkCompletion (Range (P 0 2) (P 0 7)) (Slug "kWp7rk0suUXd") "Hello world" "Hello"]
+  it "doesn't return completions when no [[" $
+    makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 5) "Hello"
+      `shouldBe` []
+  it "returns all matching completions sorted in a reasonable order" $
+    makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 7) "[[world"
+      `shouldBe` [ wikiLinkCompletion (Range (P 0 2) (P 0 7)) (Slug "7Fu2PSiqrvz4") "Test world" "world",
+                   wikiLinkCompletion (Range (P 0 2) (P 0 7)) (Slug "kWp7rk0suUXd") "Hello world" "world",
+                   wikiLinkCompletion (Range (P 0 2) (P 0 7)) (Slug "acZlsJzsFs2g") "A wild unordinary herald" "world"
+                 ]
+  it "doesn't complete when there is a complete wiki link earlier in the line but no [[" $
+    makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 28) "[[7Fu2PSiqrvz4|Hello]] world"
+      `shouldBe` []
+  it "is not confused by a second wikilink on the same line" $
+    makeWikiLinkCompletionsFromLine fakeNoteInfoCache (P 0 30) "[[7Fu2PSiqrvz4|Hello]] [[Hello"
+      `shouldBe` [wikiLinkCompletion (Range (P 0 25) (P 0 30)) (Slug "kWp7rk0suUXd") "Hello world" "Hello"]

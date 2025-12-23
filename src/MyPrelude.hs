@@ -10,7 +10,6 @@ where
 import Control.Arrow as X (left, right, (<<<), (>>>))
 import Control.Lens as X
   ( Fold,
-    (?~),
     Getter,
     Lens,
     Lens',
@@ -36,6 +35,7 @@ import Control.Lens as X
     (%~),
     (&),
     (.~),
+    (?~),
     (^.),
     (^..),
     (^?),
@@ -68,12 +68,12 @@ import GHC.TypeLits as X
 import MyPrelude.Effect as X
 import MyPrelude.Effect.EarlyReturn as X
 import MyPrelude.ExceptionErrorT as X
+import MyPrelude.JSON as X
 import MyPrelude.MaybeEither as X
 import MyPrelude.Orphans ()
 import MyPrelude.RawStrings as X
 import MyPrelude.RestrictedClassyPrelude as X
 import MyPrelude.Testing as X
-import MyPrelude.JSON as X
 
 -- | Branch over a 'Foldable' collection of values using the supplied
 --   action.

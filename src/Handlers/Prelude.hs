@@ -82,8 +82,8 @@ throwNoContentsAvailable ::
 throwNoContentsAvailable = do
   let msg = "Failed to retrieve text from requested document."
   logError msg
-  throwError_
-    $ TResponseError
+  throwError_ $
+    TResponseError
       { _code = InL LSPErrorCodes_RequestFailed,
         _message = msg,
         _xdata = Nothing
@@ -99,8 +99,8 @@ throwDocumentStateDoesNotParse ::
 throwDocumentStateDoesNotParse = do
   let msg = "Current document state doesn't parse"
   logError msg
-  throwError_
-    $ TResponseError
+  throwError_ $
+    TResponseError
       { _code = InL LSPErrorCodes_RequestFailed,
         _message = msg,
         _xdata = Nothing

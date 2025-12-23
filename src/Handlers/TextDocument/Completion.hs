@@ -1,15 +1,15 @@
 module Handlers.TextDocument.Completion where
 
+import Effectful.FileSystem
 import Effectful.State.Static.Shared
 import Handlers.Prelude
+import Language.LSP.Protocol.Lens qualified as J
 import Models.Completion
 import Models.NoteInfo
+import Models.Page.Utils qualified as Page
+import Models.Slug qualified as Slug
 import MyPrelude
 import Utils.RangePosition
-import Models.Slug qualified as Slug
-import Models.Page.Utils qualified as Page
-import Language.LSP.Protocol.Lens qualified as J
-import Effectful.FileSystem
 
 textDocumentCompletion ::
   ( VFSAccess :> es,
@@ -37,12 +37,13 @@ textDocumentCompletion request = do
 
 throwUnableToExtractOriginalCompletion ::
   (Logging :> es, Error (TResponseError Method_CompletionItemResolve) :> es) =>
-  Text -> Eff es a
+  Text ->
+  Eff es a
 throwUnableToExtractOriginalCompletion err = do
   let msg = "Can't extract original completion; failed with error: " <> err
   logError msg
-  throwError_
-    $ TResponseError
+  throwError_ $
+    TResponseError
       { _code = InR ErrorCodes_InvalidRequest,
         _message = msg,
         _xdata = Nothing
@@ -56,20 +57,25 @@ completionItemResolve ::
     State NoteInfoCache :> es
   ) =>
   HandlerFor 'Method_CompletionItemResolve es
-completionItemResolve TRequestMessage{_params = completionItem} = do
-  completion <- extractOriginalCompletion completionItem 
-    `onLeft` throwUnableToExtractOriginalCompletion
+completionItemResolve TRequestMessage {_params = completionItem} = do
+  completion <-
+    extractOriginalCompletion completionItem
+      `onLeft` throwUnableToExtractOriginalCompletion
   currentDirectory <- getCurrentDirectory
   let uri = Slug.intoUri currentDirectory completion.slug
   (_, mcontents) <- tryGetUriContents uri
   contents <- mcontents `onNothing` throwNoContentsAvailable
   parsed <- parseDocumentThrow uri contents
-  firstH1Position@(Position l _) <- 
+  firstH1Position@(Position l _) <-
     Page.getFirstH1Position parsed `onNothing` throwNoContentsAvailable
   let range = Range firstH1Position (Position (l + 1000) 0)
-  let notePreview = MarkupContent MarkupKind_Markdown (contents `restrictToRange` range)
-  let resolved = 
-        completionItem 
-        & J.documentation ?~ InR notePreview
+  let notePreview =
+        MarkupContent
+          MarkupKind_Markdown
+          (contents `restrictToRange` range)
+  let resolved =
+        completionItem
+          & J.documentation
+            ?~ InR notePreview
   logInfo $ "Resolved completion: " <> tshow resolved
   pure resolved

@@ -9,7 +9,7 @@ where
 
 import ClassyPrelude
 import Data.Aeson
-import Data.Aeson as X (FromJSON, ToJSON, eitherDecode, eitherDecodeStrict, encode, toJSON, Value(..))
+import Data.Aeson as X (FromJSON, ToJSON, Value (..), eitherDecode, eitherDecodeStrict, encode, toJSON)
 import GHC.Generics
 
 newtype FastGenericEncoding a = GenericEncodingAeson

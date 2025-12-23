@@ -23,8 +23,8 @@ rootExceptionHandler action =
   action `catchAny` \e -> do
     let msg = "Encountered unrecoverable error during request: " <> tshow e
     logError msg
-    throwError_
-      $ TResponseError
+    throwError_ $
+      TResponseError
         { _code = InR ErrorCodes_InternalError,
           _message = msg,
           _xdata = Nothing
@@ -86,8 +86,8 @@ serverOptions =
               _save = Nothing
             },
       optServerInfo =
-        Just
-          $ ServerInfo "wiki-language-server" (Just $ tshow version),
+        Just $
+          ServerInfo "wiki-language-server" (Just $ tshow version),
       optCompletionTriggerCharacters = Just extraCompletionCharacters
     }
 

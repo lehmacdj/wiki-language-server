@@ -85,9 +85,9 @@ spec_restrictToRange = do
           This is the third line.
         |]
   let restrictsMultilineSampleTo r expected =
-        it (show r <> " restricts multiline sample to")
-          $ (multilineSample `restrictToRange` r)
-          `shouldBe` expected
+        it (show r <> " restricts multiline sample to") $
+          (multilineSample `restrictToRange` r)
+            `shouldBe` expected
   R (P 0 0) (P 0 4) `restrictsMultilineSampleTo` "Some"
   R (P 0 5) (P 0 11) `restrictsMultilineSampleTo` "sample"
   R (P 0 0) (P 1 0) `restrictsMultilineSampleTo` "Some sample text.\n"

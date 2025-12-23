@@ -27,10 +27,10 @@ titleForSlug slug = withEarlyReturn do
   -- might be sensible to tune this e.g. by invalidating the cache if the
   -- cache was updated later than the file etc. but treating the cache as
   -- accurate is probably fine?
-  withJustM (gets (IxSet.getOne . IxSet.getEQ slug))
-    $ returnEarly
-    . Just
-    . (.title)
+  withJustM (gets (IxSet.getOne . IxSet.getEQ slug)) $
+    returnEarly
+      . Just
+      . (.title)
   noteInfo@NoteInfo {..} <-
     collectNoteInfoForSlugWithUri slug uri `onNothingM` returnEarly Nothing
   modify $ IxSet.updateIx slug noteInfo
