@@ -1,4 +1,4 @@
-module Executable.WikiLanguageServer (main) where
+module Executable.WikiLanguageServer (wikiLanguageServerMain) where
 
 import Executable.WikiLanguageServer.Interpreter
 import Executable.WikiLanguageServer.ServerDefinition
@@ -16,5 +16,5 @@ main_ = do
   exitCode <- unsafeEff $ runServer . serverDefinition
   liftIO . exitWith $ exitCodeFromInt exitCode
 
-main :: IO ()
-main = runGlobalEffects_ main_
+wikiLanguageServerMain :: IO ()
+wikiLanguageServerMain = runGlobalEffects_ main_
