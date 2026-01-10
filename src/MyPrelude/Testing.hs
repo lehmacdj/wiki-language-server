@@ -7,3 +7,4 @@ import Test.Hspec as X (Spec, describe, it)
 import Test.Hspec.Expectations as X
 import Test.Tasty as X
 import Test.Tasty.HUnit as X hiding (assert)
+import Test.Tasty.QuickCheck as X hiding (Fixed (..), label)

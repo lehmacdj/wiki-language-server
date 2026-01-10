@@ -67,6 +67,7 @@ library
       MyPrelude.RestrictedClassyPrelude
       MyPrelude.Testing
       Spec
+      Utils.DateTimeParsing
       Utils.Diagnostics
       Utils.FilePathUri
       Utils.Logging
@@ -142,6 +143,7 @@ library
     , containers
     , data-default
     , directory
+    , duckling
     , effectful
     , effectful-core
     , effectful-plugin
@@ -254,6 +256,7 @@ executable wiki-language-server
     , containers
     , data-default
     , directory
+    , duckling
     , effectful
     , effectful-core
     , effectful-plugin
@@ -368,6 +371,7 @@ test-suite wiki-language-server-test
     , containers
     , data-default
     , directory
+    , duckling
     , effectful
     , effectful-core
     , effectful-plugin
