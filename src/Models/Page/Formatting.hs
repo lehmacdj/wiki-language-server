@@ -51,7 +51,13 @@ pattern Positioned range x <- Span (attrRanges -> Just [range]) [x]
 
 pattern PositionedLink :: Range -> [Inline] -> Text -> Inline
 pattern PositionedLink range x slug <-
-  Link (attrRanges -> Just [range]) x (slug, "wikilink")
+  Link (wikilinkRanges -> Just [range]) x (slug, _)
+
+-- | Extract ranges from attr only if it has the wikilink class
+wikilinkRanges :: Attr -> Maybe [Range]
+wikilinkRanges attr@(_, classes, _)
+  | "wikilink" `elem` classes = attrRanges attr
+  | otherwise = Nothing
 
 editsForPage :: Pandoc -> [FormattingOperation]
 editsForPage = query transcludeNoteTitles

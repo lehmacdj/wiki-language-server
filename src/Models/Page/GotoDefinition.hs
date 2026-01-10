@@ -28,10 +28,11 @@ getLinkTargetAtPosition (Pandoc _meta blocks) p = go . fromList $ map B blocks
     go (B b :<| rest) = go (seqOf (template . to B <> template . to I) b <> rest)
     go (I i@(preview (attrI . to attrRanges . _Just) -> Just ranges) :<| rest)
       | any (p `positionInRange`) ranges = case i of
-          Link _ _ (slug, "wikilink") ->
-            -- interpret wiki links as relative to the current file as determined
-            -- by the position
-            Just $ Wikilink $ Slug slug
+          Link (_, classes, _) _ (slug, _)
+            | "wikilink" `elem` classes ->
+                -- interpret wiki links as relative to the current file as determined
+                -- by the position
+                Just $ Wikilink $ Slug slug
           Link _ _ (url, _) ->
             -- TODO: ensure that url is a proper Uri in LSP sense, and possibly
             -- do some doctoring to make it so or otherwise don't return it

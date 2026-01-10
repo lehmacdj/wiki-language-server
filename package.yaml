@@ -112,6 +112,7 @@ default-extensions:
 - OverloadedLabels
 - OverloadedRecordDot
 - OverloadedStrings
+- PatternGuards
 - PatternSynonyms
 - PolyKinds
 - QuantifiedConstraints
