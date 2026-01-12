@@ -20,6 +20,7 @@ import Effectful.FileSystem.IO.ByteString as X (readFile, writeFile)
 import Effectful.Reader.Dynamic as X
 import Effectful.TH as X
 import MyPrelude.Effect.Input as X
+import MyPrelude.FileSystem as X
 import MyPrelude.RestrictedClassyPrelude
 
 type EffectfulEnv es = Env es

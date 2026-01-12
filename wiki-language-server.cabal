@@ -44,6 +44,7 @@ library
       Models.LinkTarget
       Models.NoteInfo
       Models.NoteInfo.CollectIO
+      Models.NoteInfo.Serialization
       Models.Page.Formatting
       Models.Page.GotoDefinition
       Models.Page.Parser
@@ -58,6 +59,7 @@ library
       MyPrelude.Effect.EarlyReturn
       MyPrelude.Effect.Input
       MyPrelude.ExceptionErrorT
+      MyPrelude.FileSystem
       MyPrelude.JSON
       MyPrelude.MaybeEither
       MyPrelude.Orphans

@@ -72,7 +72,7 @@ import MyPrelude.JSON as X
 import MyPrelude.MaybeEither as X
 import MyPrelude.Orphans ()
 import MyPrelude.RawStrings as X
-import MyPrelude.RestrictedClassyPrelude as X
+import MyPrelude.RestrictedClassyPrelude as X hiding (withTempFile)
 import MyPrelude.Testing as X
 
 -- | Branch over a 'Foldable' collection of values using the supplied
