@@ -3,6 +3,7 @@
 module Models.Page.Utils
   ( -- * get various bits and bobs out of a page
     getTitle,
+    dayNoteTitleToDay,
     getFirstH1Position,
 
     -- * utils
@@ -12,6 +13,7 @@ module Models.Page.Utils
 
     -- * tests
     spec_pSourceRange,
+    spec_dayNoteTitleToDay,
     spec_getTitle,
     spec_getFirstH1Position,
   )
@@ -269,6 +271,57 @@ spec_getTitle = do
         Body content
       |]
       `shouldBe` Just "A title with in it"
+
+dayNoteTitleToDay :: Text -> Maybe Day
+dayNoteTitleToDay title = do
+  -- Parse a date from the start of the title
+  (dateStr, rest) <- P.parseMaybe pDatePrefix title
+  -- Reject if there's another date in the suffix
+  guard $ not $ hasDatePattern rest
+  parseTimeM True defaultTimeLocale "%Y-%m-%d" (unpack dateStr)
+  where
+    -- Parser that extracts the date prefix and remaining text
+    pDatePrefix :: P.Parsec Void Text (Text, Text)
+    pDatePrefix = do
+      dateStr <- P.takeP (Just "date") 10
+      rest <- P.takeRest
+      pure (dateStr, rest)
+    -- Check if text contains a date pattern (YYYY-MM-DD)
+    hasDatePattern :: Text -> Bool
+    hasDatePattern t = isJust $ P.parseMaybe pFindDate t
+    pFindDate :: P.Parsec Void Text ()
+    pFindDate = void $ P.manyTill P.anySingle pDatePattern
+    pDatePattern :: P.Parsec Void Text ()
+    pDatePattern = void $ do
+      P.count 4 P.digitChar
+      void $ P.char '-'
+      P.count 2 P.digitChar
+      void $ P.char '-'
+      P.count 2 P.digitChar
+
+spec_dayNoteTitleToDay :: Spec
+spec_dayNoteTitleToDay = do
+  let getsDayFromValidTitle title day =
+        it (unpack title) $ dayNoteTitleToDay title `shouldBe` Just day
+      failsToParse title =
+        it ("fails to parse " ++ show title) $
+          dayNoteTitleToDay title `shouldBe` Nothing
+  "2023-08-15" `getsDayFromValidTitle` fromGregorian 2023 8 15
+  "2023-08-15 (parenthesized text)"
+    `getsDayFromValidTitle` fromGregorian 2023 8 15
+  "2023-08-15 - textual description"
+    `getsDayFromValidTitle` fromGregorian 2023 8 15
+  it "fails to parse an invalid date title" $
+    dayNoteTitleToDay "not-a-date"
+      `shouldBe` Nothing
+  describe "date needs to come first" do
+    failsToParse "some description 2023-08-15"
+    failsToParse "some description - 2023-08-15"
+    failsToParse "some description (2023-08-15)"
+  describe "fails with multiple dates" do
+    failsToParse "2023-08-15 and also 2023-08-16"
+    failsToParse "2023-08-15 - 2023-08-16"
+    failsToParse "2023-08-15 through 2023-08-16"
 
 getFirstH1Position :: Pandoc -> Maybe Position
 getFirstH1Position (Pandoc _ body) =
