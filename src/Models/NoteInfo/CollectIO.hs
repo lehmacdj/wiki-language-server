@@ -32,4 +32,5 @@ collectNoteInfoForSlugWithUri slug uri = withEarlyReturn do
       sendDiagnostics uri version [diagnostic]
       returnEarly Nothing
   title <- Page.getTitle parsed `onNothing` returnEarly Nothing
+  let day = Page.dayNoteTitleToDay title
   pure $ Just $ NoteInfo {..}

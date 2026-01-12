@@ -1,6 +1,7 @@
 module Models.NoteInfo.Serialization
   ( -- * Serialization
     serializeNoteInfoCache,
+    serializeNoteInfo,
     deserializeNoteInfoCache,
 
     -- * Tests
@@ -15,10 +16,12 @@ import Data.Text (splitOn)
 import Data.Text.Encoding (decodeUtf8')
 import Data.Text.Encoding qualified as Text
 import Models.NoteInfo
+import Models.Page.Utils (dayNoteTitleToDay)
 import Models.Slug (Slug (..))
 import MyPrelude hiding (Builder)
 
 -- | Serialize NoteInfoCache to a Builder (TSV format: slug<TAB>title per line)
+-- Note: day field is not serialized as it's derived from title
 serializeNoteInfoCache :: NoteInfoCache -> Builder.Builder
 serializeNoteInfoCache cache =
   mconcat
@@ -34,6 +37,7 @@ serializeNoteInfo NoteInfo {slug = Slug slugText, title} =
 
 -- | Deserialize NoteInfoCache from ByteString (TSV format)
 -- Returns Left with error message on parse failure
+-- Note: day field is recomputed from title using dayNoteTitleToDay
 deserializeNoteInfoCache :: ByteString -> Either Text NoteInfoCache
 deserializeNoteInfoCache bs =
   case decodeUtf8' bs of
@@ -48,7 +52,9 @@ parseLines text = do
 parseLine :: Text -> Either Text NoteInfo
 parseLine line =
   case splitOn "\t" line of
-    [slugText, titleText] -> Right $ NoteInfo (Slug slugText) titleText
+    [slugText, titleText] ->
+      let day = dayNoteTitleToDay titleText
+       in Right $ NoteInfo (Slug slugText) titleText day
     _ -> Left $ "Invalid line format (expected slug<TAB>title): " <> line
 
 -- | Convert Builder to strict ByteString
@@ -65,7 +71,7 @@ spec_serializeDeserializeRoundtrip = describe "NoteInfo serialization" do
     roundtrip cache `shouldBe` Right cache
 
   it "roundtrips single entry" do
-    let cache = IxSet.fromList [NoteInfo (Slug "test-slug") "Test Title"]
+    let cache = IxSet.fromList [NoteInfo (Slug "test-slug") "Test Title" Nothing]
     roundtrip cache `shouldBe` Right cache
 
   it "roundtrips fakeNoteInfoCache" do
@@ -73,7 +79,8 @@ spec_serializeDeserializeRoundtrip = describe "NoteInfo serialization" do
 
   it "handles titles with special characters" do
     let cache =
-          IxSet.fromList [NoteInfo (Slug "id") "Title with: colons & ampersands"]
+          IxSet.fromList
+            [NoteInfo (Slug "id") "Title with: colons & ampersands" Nothing]
     roundtrip cache `shouldBe` Right cache
 
   it "rejects malformed input (missing tab)" do
@@ -81,6 +88,12 @@ spec_serializeDeserializeRoundtrip = describe "NoteInfo serialization" do
       `shouldSatisfy` has _Left
 
   it "produces grep-friendly TSV format" do
-    let cache = IxSet.fromList [NoteInfo (Slug "abc") "XYZ"]
+    let cache = IxSet.fromList [NoteInfo (Slug "abc") "XYZ" Nothing]
     builderToByteString (serializeNoteInfoCache cache)
       `shouldBe` "abc\tXYZ\n"
+
+  it "roundtrips day notes" do
+    let cache =
+          IxSet.fromList
+            [NoteInfo (Slug "day1") "2023-08-15" (Just (fromGregorian 2023 8 15))]
+    roundtrip cache `shouldBe` Right cache

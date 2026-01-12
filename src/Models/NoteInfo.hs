@@ -6,29 +6,30 @@ import MyPrelude
 
 data NoteInfo = NoteInfo
   { slug :: Slug,
-    title :: Text
-    -- perhaps want to also keep track of these for efficiency purposes:
-    -- uri :: NormalizedUri,
-    -- lastUpdated :: UTCTime
+    title :: Text,
+    day :: Maybe Day -- derived from title via dayNoteTitleToDay
   }
   deriving stock (Show, Eq, Ord, Generic)
 
 newtype Title = Title Text
   deriving stock (Show, Eq, Ord, Generic)
 
-instance Indexable [Slug, Title] NoteInfo where
+instance Indexable [Slug, Title, Maybe Day] NoteInfo where
   indices =
     ixList
       (ixFun (pure . (.slug)))
       (ixFun (pure . Title . (.title)))
+      (ixFun (pure . (.day)))
 
-type NoteInfoCache = IxSet [Slug, Title] NoteInfo
+type NoteInfoCache = IxSet [Slug, Title, Maybe Day] NoteInfo
 
 fakeNoteInfoCache :: NoteInfoCache
 fakeNoteInfoCache =
   Data.IxSet.Typed.fromList
-    [ NoteInfo (Slug "kWp7rk0suUXd") "Hello world",
-      NoteInfo (Slug "7Fu2PSiqrvz4") "Test world",
-      NoteInfo (Slug "JQiVd3GmGPpP") "Some string",
-      NoteInfo (Slug "acZlsJzsFs2g") "A wild unordinary herald"
+    [ NoteInfo (Slug "kWp7rk0suUXd") "Hello world" Nothing,
+      NoteInfo (Slug "7Fu2PSiqrvz4") "Test world" Nothing,
+      NoteInfo (Slug "JQiVd3GmGPpP") "Some string" Nothing,
+      NoteInfo (Slug "acZlsJzsFs2g") "A wild unordinary herald" Nothing,
+      NoteInfo (Slug "day1") "2023-08-15" (Just (fromGregorian 2023 8 15)),
+      NoteInfo (Slug "day2") "2023-08-16 - Meeting" (Just (fromGregorian 2023 8 16))
     ]

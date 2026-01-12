@@ -25,7 +25,8 @@ onDocumentChange uri = withEarlyReturn do
       title <- Page.getTitle parsed `onNothing` returnEarly ()
       filepath <- nuriToFilePath uri `onNothing` returnEarly ()
       slug <- Slug.fromMarkdownFilePath filepath `onNothing` returnEarly ()
-      modify $ IxSet.updateIx slug NoteInfo {slug, title}
+      let day = Page.dayNoteTitleToDay title
+      modify $ IxSet.updateIx slug NoteInfo {slug, title, day}
 
 textDocumentDidOpen ::
   (LSP :> es, VFSAccess :> es, Diagnostics :> es, State NoteInfoCache :> es) =>
