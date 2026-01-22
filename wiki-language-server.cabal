@@ -48,6 +48,7 @@ library
       Models.Page.Formatting
       Models.Page.GotoDefinition
       Models.Page.Parser
+      Models.Page.SourcePos
       Models.Page.TH
       Models.Page.Utils
       Models.Slug

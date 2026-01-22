@@ -1,20 +1,19 @@
 module Models.Page.Parser where
 
 import Commonmark hiding (BulletList, OrderedList)
-import Commonmark.Extensions hiding (BulletList, OrderedList)
+import Commonmark.Extensions
 import Commonmark.Pandoc
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap qualified as KeyMap
-import Data.Text (breakOn)
 import Data.Yaml qualified as Yaml
 import Models.Diagnostics
+import Models.Page.SourcePos (offsetAttr)
 import MyPrelude
 import Text.Pandoc.Builder qualified as Pandoc
 import Text.Pandoc.Definition
 import Text.Pandoc.Walk (walk)
 import Text.Parsec.Error qualified as Parsec
 import Text.Parsec.Pos qualified as Parsec
-import Text.Read (readMaybe)
 import Utils.RangePosition
 import Utils.TH
 
@@ -56,56 +55,22 @@ yamlToMeta = \case
   Yaml.String s -> MetaString s
   Yaml.Bool b -> MetaBool b
   Yaml.Number n -> MetaString (tshow n)
-  Yaml.Array arr -> MetaList (map yamlToMeta (toList arr))
+  Yaml.Array arr -> MetaList $ map yamlToMeta (toList arr)
   Yaml.Object obj ->
-    MetaMap $
-      mapFromList
-        [ (Key.toText k, yamlToMeta v)
-        | (k, v) <- KeyMap.toList obj
-        ]
+    MetaMap . mapFromList $
+      [(Key.toText k, yamlToMeta v) | (k, v) <- KeyMap.toList obj]
   Yaml.Null -> MetaString ""
 
 -- | Parse YAML frontmatter into Pandoc Meta
 parseFrontmatter :: Text -> Either Diagnostic Meta
 parseFrontmatter yaml =
   case Yaml.decodeEither' (encodeUtf8 yaml) of
-    Left err ->
-      Left $ mkDiagnostic ParseError (atLineCol 1 1) (pretty (tshow err))
+    Left err -> Left $ mkDiagnostic ParseError pos (pretty (tshow err))
     Right val -> case yamlToMeta val of
       MetaMap m -> Right $ Meta m
-      _ ->
-        Left $
-          mkDiagnostic ParseError (atLineCol 1 1) "Frontmatter must be a YAML object"
-
--- | Offset line numbers in a data-pos attribute value by the given amount.
--- The format is "filepath@startLine:startCol-endLine:endCol".
-offsetDataPos :: Int -> Text -> Text
-offsetDataPos offset pos = case breakOn "@" pos of
-  (filepath, rest)
-    | not (null rest) ->
-        filepath <> "@" <> offsetRangeStr (drop 1 rest)
-  _ -> pos
+      _ -> Left $ mkDiagnostic ParseError pos "Frontmatter must be a YAML object"
   where
-    offsetRangeStr rangeStr = case breakOn "-" rangeStr of
-      (startPart, endRest)
-        | not (null endRest) ->
-            offsetPosPart startPart <> "-" <> offsetPosPart (drop 1 endRest)
-      _ -> rangeStr
-
-    offsetPosPart posPart = case breakOn ":" posPart of
-      (lineStr, colRest) | not (null colRest) ->
-        case readMaybe (unpack lineStr) of
-          Just line -> pack (show (line + offset)) <> colRest
-          Nothing -> posPart
-      _ -> posPart
-
--- | Offset all data-pos attributes in Attr by the given line offset.
-offsetAttr :: Int -> Attr -> Attr
-offsetAttr offset (ident, classes, kvs) =
-  (ident, classes, map offsetKV kvs)
-  where
-    offsetKV ("data-pos", v) = ("data-pos", offsetDataPos offset v)
-    offsetKV kv = kv
+    pos = atLineCol 1 1
 
 -- | Offset all source positions in a Block by the given line offset.
 -- Only blocks with Attr contain position information that needs offsetting.
@@ -173,4 +138,4 @@ test_parse =
   ]
   where
     goldenParse :: (HasCallStack) => String -> Text -> TestTree
-    goldenParse name input = goldenTestShow name $ parse ("test.md") input
+    goldenParse name input = goldenTestShow name $ parse "test.md" input
