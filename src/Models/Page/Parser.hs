@@ -10,6 +10,7 @@ import Text.Pandoc.Definition
 import Text.Parsec.Error qualified as Parsec
 import Text.Parsec.Pos qualified as Parsec
 import Utils.RangePosition
+import Utils.TH
 
 parseErrorFromParsec :: Parsec.ParseError -> Diagnostic
 parseErrorFromParsec err =
@@ -36,3 +37,28 @@ parse filepath t = do
   case r of
     Left err -> Left $ parseErrorFromParsec err
     Right v -> Right $ toPandoc v
+
+test_parse :: [TestTree]
+test_parse =
+  [ goldenParse
+      "simple"
+      [rTrim|
+      # Hello World
+      This is a simple *Markdown* document.
+    |],
+    goldenParse
+      "frontmatter"
+      [rTrim|
+      ---
+      title: This has a frontmatter
+      tags:
+        - foo
+        - bar
+      ---
+
+      Some text
+      |]
+  ]
+  where
+    goldenParse :: (HasCallStack) => String -> Text -> TestTree
+    goldenParse name input = goldenTestShow name $ parse ("test.md") input
