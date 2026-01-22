@@ -68,6 +68,7 @@ library
       MyPrelude.RawStrings
       MyPrelude.RestrictedClassyPrelude
       MyPrelude.Testing
+      MyPrelude.Testing.GoldenSpec
       Spec
       Utils.DateTimeParsing
       Utils.Diagnostics
