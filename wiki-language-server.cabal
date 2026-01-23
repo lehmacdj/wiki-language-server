@@ -28,6 +28,8 @@ source-repository head
 library
   exposed-modules:
       BackgroundTasks.UpdateNoteCache
+      Executable.Options
+      Executable.Wiki
       Executable.WikiLanguageServer
       Executable.WikiLanguageServer.Interpreter
       Executable.WikiLanguageServer.ServerDefinition
@@ -165,6 +167,7 @@ library
     , megaparsec
     , monad-control
     , mtl
+    , optparse-applicative
     , pandoc-types
     , parsec
     , parser-combinators
@@ -191,7 +194,7 @@ library
     , yaml
   default-language: Haskell2010
 
-executable wiki-language-server
+executable wiki
   main-is: Main.hs
   other-modules:
       Paths_wiki_language_server
@@ -279,6 +282,7 @@ executable wiki-language-server
     , megaparsec
     , monad-control
     , mtl
+    , optparse-applicative
     , pandoc-types
     , parsec
     , parser-combinators
@@ -395,6 +399,7 @@ test-suite wiki-language-server-test
     , megaparsec
     , monad-control
     , mtl
+    , optparse-applicative
     , pandoc-types
     , parsec
     , parser-combinators

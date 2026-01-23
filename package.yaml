@@ -52,6 +52,7 @@ dependencies:
 - megaparsec
 - monad-control
 - mtl
+- optparse-applicative
 - pandoc-types
 - parsec
 - parser-combinators
@@ -138,7 +139,7 @@ library:
   source-dirs: src
 
 executables:
-  wiki-language-server:
+  wiki:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
