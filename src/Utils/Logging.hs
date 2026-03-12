@@ -16,6 +16,10 @@ runLoggingLSP :: (LSP :> es, IOE :> es) => Eff (Logging : es) a -> Eff es a
 runLoggingLSP = interpret_ \case
   LogMessage msg -> defaultClientLogger <& msg
 
+runLoggingNoOp :: Eff (Logging : es) a -> Eff es a
+runLoggingNoOp = interpret_ \case
+  LogMessage _ -> pure ()
+
 defaultLogger :: (Logging :> es) => LogAction (Eff es) (WithSeverity Text)
 defaultLogger = LogAction logMessage
 

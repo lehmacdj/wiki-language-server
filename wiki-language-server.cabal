@@ -20,6 +20,9 @@ build-type:     Simple
 extra-source-files:
     README.md
     ChangeLog.md
+data-files:
+    extract-note/SKILL.md
+data-dir:       skills
 
 source-repository head
   type: git
@@ -33,6 +36,8 @@ library
       Executable.WikiLanguageServer
       Executable.WikiLanguageServer.Interpreter
       Executable.WikiLanguageServer.ServerDefinition
+      Executable.WikiNote
+      Executable.WikiSkills
       Handlers.Initialized
       Handlers.Prelude
       Handlers.TextDocument.Changes
@@ -174,6 +179,7 @@ library
     , prettyprinter
     , prettyprinter-ansi-terminal
     , quickcheck-instances
+    , random
     , safe-exceptions
     , sqlite-simple
     , strict-mutable-base
@@ -189,6 +195,7 @@ library
     , time
     , transformers
     , unbounded-delays
+    , unix
     , unliftio
     , xdg-basedir
     , yaml
@@ -289,6 +296,7 @@ executable wiki
     , prettyprinter
     , prettyprinter-ansi-terminal
     , quickcheck-instances
+    , random
     , safe-exceptions
     , sqlite-simple
     , strict-mutable-base
@@ -304,6 +312,7 @@ executable wiki
     , time
     , transformers
     , unbounded-delays
+    , unix
     , unliftio
     , wiki-language-server
     , xdg-basedir
@@ -406,6 +415,7 @@ test-suite wiki-language-server-test
     , prettyprinter
     , prettyprinter-ansi-terminal
     , quickcheck-instances
+    , random
     , safe-exceptions
     , sqlite-simple
     , strict-mutable-base
@@ -421,6 +431,7 @@ test-suite wiki-language-server-test
     , time
     , transformers
     , unbounded-delays
+    , unix
     , unliftio
     , wiki-language-server
     , xdg-basedir

@@ -5,8 +5,6 @@ import Language.LSP.Protocol.Types
 import Models.NoteInfo
 import Models.Slug
 import MyPrelude
-import Text.Fuzzy (Fuzzy (Fuzzy))
-import Text.Fuzzy qualified as Fuzzy
 import Utils.RangePosition
 import Utils.Text
 
@@ -42,18 +40,8 @@ makeWikiLinkCompletionsFromLine noteInfos position line = withEarlyReturn_ do
   -- completions aren't useful when the searchPrefix is empty
   when (null searchPrefix) $ returnEarly []
   pure $
-    Fuzzy.filter searchPrefix (toList noteInfos) "" "" (.title) False
-      <&> \(Fuzzy NoteInfo {..} _ _) ->
-        WikiLinkCompletion
-          { replaceRange = Range (sameLineWithCol position (length rest)) position,
-            slug,
-            title,
-            label = title ++ " (" ++ slug.text ++ ")",
-            typedAlias = completionContext
-          }
-  pure $
-    Fuzzy.filter searchPrefix (toList noteInfos) "" "" (.title) False
-      <&> \(Fuzzy NoteInfo {..} _ _) ->
+    fuzzyMatchByTitle searchPrefix noteInfos
+      <&> \NoteInfo {..} ->
         WikiLinkCompletion
           { replaceRange = Range (sameLineWithCol position (length rest)) position,
             slug,

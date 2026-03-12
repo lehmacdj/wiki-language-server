@@ -21,3 +21,7 @@ sendDiagnostics_ uri version diagnostics = do
 runDiagnostics :: (LSP :> es, IOE :> es) => Eff (Diagnostics : es) a -> Eff es a
 runDiagnostics = interpret_ \case
   SendDiagnostics uri version diagnostics -> sendDiagnostics_ uri version diagnostics
+
+runDiagnosticsNoOp :: Eff (Diagnostics : es) a -> Eff es a
+runDiagnosticsNoOp = interpret_ \case
+  SendDiagnostics _ _ _ -> pure ()

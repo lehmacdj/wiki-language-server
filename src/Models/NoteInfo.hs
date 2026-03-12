@@ -1,8 +1,11 @@
 module Models.NoteInfo where
 
 import Data.IxSet.Typed
+import Data.IxSet.Typed qualified as IxSet
 import Models.Slug
 import MyPrelude
+import Text.Fuzzy (Fuzzy (Fuzzy))
+import Text.Fuzzy qualified as Fuzzy
 
 data NoteInfo = NoteInfo
   { slug :: Slug,
@@ -22,6 +25,17 @@ instance Indexable [Slug, Title, Maybe Day] NoteInfo where
       (ixFun (pure . (.day)))
 
 type NoteInfoCache = IxSet [Slug, Title, Maybe Day] NoteInfo
+
+fuzzyMatchByTitle :: Text -> NoteInfoCache -> [NoteInfo]
+fuzzyMatchByTitle query cache =
+  Fuzzy.filter query (IxSet.toList cache) "" "" (.title) False
+    <&> \(Fuzzy noteInfo _ _) -> noteInfo
+
+exactMatchByTitle :: Text -> NoteInfoCache -> Maybe NoteInfo
+exactMatchByTitle query cache =
+  case IxSet.toList (cache IxSet.@= Title query) of
+    (note : _) -> Just note
+    [] -> Nothing
 
 fakeNoteInfoCache :: NoteInfoCache
 fakeNoteInfoCache =

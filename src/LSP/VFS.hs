@@ -3,9 +3,10 @@ module LSP.VFS where
 import Colog.Core (Severity (..), WithSeverity (..))
 import LSP.Raw
 import Language.LSP.Logging qualified as Logging
+import Language.LSP.Protocol.Lens qualified as J hiding (to)
 import Language.LSP.Protocol.Types
 import Language.LSP.Server qualified as Server
-import Language.LSP.VFS (VFS, VirtualFile, rangeLinesFromVfs)
+import Language.LSP.VFS (VFS, VirtualFile, emptyVFS, rangeLinesFromVfs)
 import MyPrelude
 import Utils.RangePosition
 
@@ -35,3 +36,12 @@ runVFSAccess = interpret_ \case
      in Server.persistVirtualFile logAction path uri
   GetVersionedTextDoc tdi -> Server.getVersionedTextDoc tdi
   ReverseFileMap -> Server.reverseFileMap
+
+runVFSAccessPure :: Eff (VFSAccess : es) a -> Eff es a
+runVFSAccessPure = interpret_ \case
+  GetVirtualFile _ -> pure Nothing
+  GetVirtualFiles -> pure emptyVFS
+  PersistVirtualFile _ _ -> pure Nothing
+  GetVersionedTextDoc tdi ->
+    pure $ VersionedTextDocumentIdentifier (tdi ^. J.uri) 0
+  ReverseFileMap -> pure id

@@ -13,6 +13,7 @@ import Models.Completion (extraCompletionCharacters)
 import Models.WikiLanguageServerConfig
 import MyPrelude
 import Paths_wiki_language_server (version)
+import Utils.Text (sanitizeResponse)
 
 -- | Convert any synchronous exception into a TResponseError
 rootExceptionHandler ::
@@ -34,13 +35,17 @@ rootExceptionHandler action =
 -- generally wants to use it
 requestHandler' ::
   forall (m :: Method 'ClientToServer 'Request) es.
-  (Logging :> es) =>
+  ( Logging :> es,
+    ToJSON (MessageResult m),
+    FromJSON (MessageResult m)
+  ) =>
   ( SMethod m ->
     (TRequestMessage m -> Eff (Error (TResponseError m) : es) (MessageResult m)) ->
     Handlers (Eff es)
   )
 requestHandler' s handler = requestHandler s \request responder -> do
-  runErrorNoCallStack (rootExceptionHandler (handler request)) >>= responder
+  runErrorNoCallStack (rootExceptionHandler (handler request))
+    >>= responder . fmap sanitizeResponse
 
 handlers :: Handlers (Eff Effects)
 handlers =
