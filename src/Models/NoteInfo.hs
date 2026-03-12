@@ -29,6 +29,7 @@ fakeNoteInfoCache =
     [ NoteInfo (Slug "kWp7rk0suUXd") "Hello world" Nothing,
       NoteInfo (Slug "7Fu2PSiqrvz4") "Test world" Nothing,
       NoteInfo (Slug "JQiVd3GmGPpP") "Some string" Nothing,
+      -- this title was chosen to contain "world" when fuzzy matched
       NoteInfo (Slug "acZlsJzsFs2g") "A wild unordinary herald" Nothing,
       NoteInfo (Slug "day1") "2023-08-15" (Just (fromGregorian 2023 8 15)),
       NoteInfo (Slug "day2") "2023-08-16 - Meeting" (Just (fromGregorian 2023 8 16))
