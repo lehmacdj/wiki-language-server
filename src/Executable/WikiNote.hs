@@ -8,6 +8,7 @@ import Executable.Options (LookupMode (..), OutputFormat (..))
 import LSP.VFS (runVFSAccessPure)
 import Models.NoteInfo
 import Models.NoteInfo.IO (loadCache, rescanCache, saveCache)
+import Models.NoteInfo.Query qualified as Query
 import Models.Slug (Slug (..))
 import Models.Slug qualified as Slug
 import MyPrelude
@@ -38,7 +39,7 @@ wikiNoteMain lookupMode outputFormat createIfMissing = do
         Right day ->
           lookupWithRescan
             cache
-            (IxSet.toList . (IxSet.@= Just day))
+            (Query.notesForDay day)
             (createDateNote day)
 
     handleTitleLookup cache titleText =

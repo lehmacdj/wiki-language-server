@@ -44,6 +44,7 @@ library
       Handlers.TextDocument.Completion
       Handlers.TextDocument.Definition
       Handlers.TextDocument.Formatting
+      Handlers.Workspace.ExecuteCommand
       LSP.Raw
       LSP.VFS
       Models.Completion
@@ -51,6 +52,7 @@ library
       Models.LinkTarget
       Models.NoteInfo
       Models.NoteInfo.IO
+      Models.NoteInfo.Query
       Models.NoteInfo.Serialization
       Models.Page.Formatting
       Models.Page.GotoDefinition

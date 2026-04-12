@@ -8,6 +8,7 @@ import Handlers.TextDocument.Changes
 import Handlers.TextDocument.Completion
 import Handlers.TextDocument.Definition
 import Handlers.TextDocument.Formatting
+import Handlers.Workspace.ExecuteCommand
 import Language.LSP.Server
 import Models.Completion (extraCompletionCharacters)
 import Models.WikiLanguageServerConfig
@@ -57,7 +58,10 @@ handlers =
       requestHandler' SMethod_TextDocumentDefinition textDocumentDefinition,
       requestHandler' SMethod_TextDocumentFormatting textDocumentFormatting,
       requestHandler' SMethod_TextDocumentCompletion textDocumentCompletion,
-      requestHandler' SMethod_CompletionItemResolve completionItemResolve
+      requestHandler' SMethod_CompletionItemResolve completionItemResolve,
+      requestHandler'
+        SMethod_WorkspaceExecuteCommand
+        executeCommand
     ]
 
 runEffects ::
@@ -93,7 +97,8 @@ serverOptions =
       optServerInfo =
         Just $
           ServerInfo "wiki-language-server" (Just $ tshow version),
-      optCompletionTriggerCharacters = Just extraCompletionCharacters
+      optCompletionTriggerCharacters = Just extraCompletionCharacters,
+      optExecuteCommandCommands = Just commandNames
     }
 
 serverDefinition :: EffectfulEnv GlobalEffects -> ServerDefinition Config
