@@ -5,7 +5,7 @@ import Effectful.FileSystem (getCurrentDirectory)
 import Effectful.State.Static.Shared
 import Handlers.Prelude
 import Models.NoteInfo
-import Models.NoteInfo.CollectIO
+import Models.NoteInfo.IO
 import Models.Page.Formatting qualified as Formatting
 import Models.Slug (Slug)
 import Models.Slug qualified as Slug

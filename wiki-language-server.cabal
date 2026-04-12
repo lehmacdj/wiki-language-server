@@ -50,7 +50,7 @@ library
       Models.Diagnostics
       Models.LinkTarget
       Models.NoteInfo
-      Models.NoteInfo.CollectIO
+      Models.NoteInfo.IO
       Models.NoteInfo.Serialization
       Models.Page.Formatting
       Models.Page.GotoDefinition
