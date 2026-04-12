@@ -10,7 +10,9 @@ newtype Slug = Slug {text :: Text}
   deriving (FromJSON, ToJSON) via FastGenericEncoding Slug
 
 intoFilePathRelativeToDir :: FilePath -> Text -> FilePath
-intoFilePathRelativeToDir dir slug = dir <> "/" <> unpack slug <> ".md"
+intoFilePathRelativeToDir dir slug
+  | dir == "." = unpack slug <> ".md"
+  | otherwise = dir <> "/" <> unpack slug <> ".md"
 
 intoUri :: FilePath -> Slug -> NormalizedUri
 intoUri dir (Slug slug) =
