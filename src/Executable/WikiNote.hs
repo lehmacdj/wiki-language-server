@@ -73,7 +73,7 @@ wikiNoteMain lookupMode outputFormat createIfMissing wikiDir = do
         alreadyExistsError note = do
           let path =
                 Slug.intoFilePathRelativeToDir
-                  "."
+                  wikiDir
                   note.slug.text
           hPutStrLn stderr $
             "Error: a note with this exact title "
@@ -114,7 +114,7 @@ wikiNoteMain lookupMode outputFormat createIfMissing wikiDir = do
       OutputPath ->
         putStrLn $
           pack $
-            Slug.intoFilePathRelativeToDir "." note.slug.text
+            Slug.intoFilePathRelativeToDir wikiDir note.slug.text
       OutputSlug -> putStrLn note.slug.text
 
     outputNotes :: [NoteInfo] -> IO ()
