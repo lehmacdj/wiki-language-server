@@ -7,11 +7,17 @@ import Effectful.FileSystem (runFileSystem)
 import Executable.Options (LookupMode (..), OutputFormat (..))
 import LSP.VFS (runVFSAccessPure)
 import Models.NoteInfo
-import Models.NoteInfo.IO (loadCache, rescanCache, saveCache)
+import Models.NoteInfo.IO
+  ( createDateNote,
+    loadCache,
+    rescanCache,
+    saveCache,
+  )
 import Models.NoteInfo.Query qualified as Query
 import Models.Slug (Slug (..))
 import Models.Slug qualified as Slug
 import MyPrelude
+import System.Directory (setCurrentDirectory)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn)
 import Utils.DateTimeParsing (NaturalLanguageParseError)
@@ -19,8 +25,10 @@ import Utils.DateTimeParsing qualified
 import Utils.Diagnostics (runDiagnosticsNoOp)
 import Utils.Logging (runLoggingNoOp)
 
-wikiNoteMain :: LookupMode -> OutputFormat -> Bool -> IO ()
-wikiNoteMain lookupMode outputFormat createIfMissing = do
+wikiNoteMain ::
+  LookupMode -> OutputFormat -> Bool -> FilePath -> IO ()
+wikiNoteMain lookupMode outputFormat createIfMissing wikiDir = do
+  setCurrentDirectory wikiDir
   cache <- runEffects loadCache
   case lookupMode of
     MatchingDate dateText -> handleDateLookup cache dateText
@@ -40,7 +48,7 @@ wikiNoteMain lookupMode outputFormat createIfMissing = do
           lookupWithRescan
             cache
             (Query.notesForDay day)
-            (createDateNote day)
+            (runEffects $ createDateNote day)
 
     handleTitleLookup cache titleText =
       lookupWithRescan
@@ -117,30 +125,6 @@ wikiNoteMain lookupMode outputFormat createIfMissing = do
       Text ->
       Either NaturalLanguageParseError Day
     parseDay = Utils.DateTimeParsing.parseDay
-
-    createDateNote :: Day -> IO NoteInfo
-    createDateNote day = do
-      slug <- Slug.generateRandomSlug
-      now <- getZonedTime
-      let title =
-            pack $ formatTime defaultTimeLocale "%Y-%m-%d" day
-          dateStr =
-            formatTime
-              defaultTimeLocale
-              "%Y-%m-%dT%H:%M:%S%Ez"
-              now
-          content =
-            unlines
-              [ "---",
-                "date: " <> pack dateStr,
-                "---",
-                "",
-                "# " <> title
-              ]
-          filePath =
-            Slug.intoFilePathRelativeToDir "." slug.text
-      writeFileUtf8 filePath content
-      pure NoteInfo {day = Just day, ..}
 
     createTitleNote :: Text -> IO NoteInfo
     createTitleNote title = do

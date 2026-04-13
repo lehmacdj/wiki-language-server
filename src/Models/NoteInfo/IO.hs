@@ -4,6 +4,7 @@ import Data.ByteString qualified as BS
 import Data.ByteString.Builder qualified as Builder
 import Data.ByteString.Lazy qualified as LBS
 import Data.IxSet.Typed qualified as IxSet
+import Data.Text.Encoding qualified as Text
 import Effectful.FileSystem
 import Handlers.Prelude
 import Models.NoteInfo
@@ -109,3 +110,31 @@ rescanCache = do
   cache <- collectNoteInfoForAllNotes
   saveCache cache
   pure cache
+
+-- | Create a new note file for the given day and return its
+-- NoteInfo. The file is written relative to the current
+-- directory.
+createDateNote :: (FileSystem :> es, IOE :> es) => Day -> Eff es NoteInfo
+createDateNote day = do
+  slug <- liftIO Slug.generateRandomSlug
+  now <- liftIO getZonedTime
+  let title =
+        pack $ formatTime defaultTimeLocale "%Y-%m-%d" day
+      dateStr =
+        formatTime
+          defaultTimeLocale
+          "%Y-%m-%dT%H:%M:%S%Ez"
+          now
+      content =
+        unlines
+          [ "---",
+            "date: " <> pack dateStr,
+            "---",
+            "",
+            "# " <> title
+          ]
+      filePath =
+        Slug.intoFilePathRelativeToDir "." slug.text
+  liftIO $
+    BS.writeFile filePath (Text.encodeUtf8 content)
+  pure NoteInfo {day = Just day, ..}

@@ -9,6 +9,8 @@ where
 
 import MyPrelude
 import Options.Applicative
+import System.Directory (getHomeDirectory)
+import System.Environment (lookupEnv)
 
 data OutputFormat = OutputPath | OutputSlug
   deriving (Show, Eq)
@@ -23,21 +25,30 @@ data SkillsCommand = SkillsSetup
 
 data Command
   = LanguageServer
-  | Note LookupMode OutputFormat Bool
+  | Note LookupMode OutputFormat Bool FilePath
   | Skills SkillsCommand
 
-commandParser :: Parser Command
-commandParser =
+commandParser :: FilePath -> Parser Command
+commandParser defaultWikiDir =
   subparser
     ( command
         "language-server"
-        (info (pure LanguageServer) (progDesc "Start the language server"))
+        ( info
+            (pure LanguageServer)
+            (progDesc "Start the language server")
+        )
         <> command
           "note"
-          (info noteParser (progDesc "Find or create a note"))
+          ( info
+              (noteParser defaultWikiDir)
+              (progDesc "Find or create a note")
+          )
         <> command
           "skills"
-          (info skillsParser (progDesc "Manage Claude Code skills"))
+          ( info
+              skillsParser
+              (progDesc "Manage Claude Code skills")
+          )
     )
 
 skillsParser :: Parser Command
@@ -52,12 +63,24 @@ skillsParser =
           )
       )
 
-noteParser :: Parser Command
-noteParser =
+noteParser :: FilePath -> Parser Command
+noteParser defaultWikiDir =
   Note
     <$> lookupModeParser
     <*> outputFormatParser
     <*> createIfMissingParser
+    <*> wikiDirParser defaultWikiDir
+
+wikiDirParser :: FilePath -> Parser FilePath
+wikiDirParser defaultWikiDir =
+  strOption
+    ( long "wiki-dir"
+        <> short 'C'
+        <> metavar "DIR"
+        <> value defaultWikiDir
+        <> showDefault
+        <> help "Wiki directory (env: WIKI_DIR)"
+    )
 
 lookupModeParser :: Parser LookupMode
 lookupModeParser =
@@ -91,14 +114,25 @@ outputFormatParser =
     <|> flag' OutputPath (long "path" <> help "Output file path (default)")
     <|> pure OutputPath
 
-opts :: ParserInfo Command
-opts =
-  info
-    (commandParser <**> helper)
-    ( fullDesc
-        <> progDesc "Wiki utilities"
-        <> header "wiki - a wiki language server and utilities"
-    )
+opts :: IO (ParserInfo Command)
+opts = do
+  defaultWikiDir <- defaultWikiDirIO
+  pure $
+    info
+      (commandParser defaultWikiDir <**> helper)
+      ( fullDesc
+          <> progDesc "Wiki utilities"
+          <> header
+            "wiki - a wiki language server and utilities"
+      )
+
+defaultWikiDirIO :: IO FilePath
+defaultWikiDirIO =
+  lookupEnv "WIKI_DIR" >>= \case
+    Just dir -> pure dir
+    Nothing -> do
+      home <- getHomeDirectory
+      pure $ home </> "wiki"
 
 createIfMissingParser :: Parser Bool
 createIfMissingParser =

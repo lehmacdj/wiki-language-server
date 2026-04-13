@@ -9,9 +9,9 @@ import Options.Applicative (execParser)
 
 wikiMain :: IO ()
 wikiMain = do
-  cmd <- execParser opts
+  cmd <- execParser =<< opts
   case cmd of
     LanguageServer -> wikiLanguageServerMain
-    Note lookupMode outputFormat createIfMissing ->
-      wikiNoteMain lookupMode outputFormat createIfMissing
+    Note lookupMode outputFormat createIfMissing wikiDir ->
+      wikiNoteMain lookupMode outputFormat createIfMissing wikiDir
     Skills skillsCmd -> wikiSkillsMain skillsCmd

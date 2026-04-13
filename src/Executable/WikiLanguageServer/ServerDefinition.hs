@@ -1,6 +1,7 @@
 module Executable.WikiLanguageServer.ServerDefinition (serverDefinition) where
 
 import BackgroundTasks.UpdateNoteCache
+import Effectful.State.Static.Shared (put)
 import Executable.WikiLanguageServer.Interpreter
 import Handlers.Initialized
 import Handlers.Prelude
@@ -11,6 +12,7 @@ import Handlers.TextDocument.Formatting
 import Handlers.Workspace.ExecuteCommand
 import Language.LSP.Server
 import Models.Completion (extraCompletionCharacters)
+import Models.NoteInfo.IO (loadCache)
 import Models.WikiLanguageServerConfig
 import MyPrelude
 import Paths_wiki_language_server (version)
@@ -79,6 +81,9 @@ doInitialize_ ::
   TMessage Method_Initialize ->
   Eff Effects (Either (TResponseError Method_Initialize) (LanguageContextEnv Config))
 doInitialize_ env _ = do
+  -- Seed the cache from disk so it's available immediately,
+  -- before the background task completes its first scan.
+  put =<< loadCache
   void . forkIO . void $ updateNoteCacheTask
   pure (Right env)
 

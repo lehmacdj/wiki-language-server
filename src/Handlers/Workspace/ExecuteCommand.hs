@@ -5,12 +5,15 @@ module Handlers.Workspace.ExecuteCommand
 where
 
 import Data.Aeson qualified as Aeson
-import Effectful.State.Static.Shared (State, get)
+import Data.IxSet.Typed qualified as IxSet
+import Effectful.FileSystem (getCurrentDirectory)
+import Effectful.State.Static.Shared (State, get, modify)
 import Handlers.Prelude
 import Language.LSP.Protocol.Lens as J hiding (executeCommand, to)
 import Language.LSP.Protocol.Types qualified as LSP
 import Language.LSP.Server (sendNotification, sendRequest)
 import Models.NoteInfo
+import Models.NoteInfo.IO qualified as NoteInfo.IO
 import Models.NoteInfo.Query qualified as Query
 import Models.Slug qualified as Slug
 import MyPrelude
@@ -18,12 +21,14 @@ import MyPrelude
 commandNames :: [Text]
 commandNames =
   [ "wiki.nextDay",
-    "wiki.prevDay"
+    "wiki.prevDay",
+    "wiki.today"
   ]
 
 executeCommand ::
   ( Logging :> es,
     State NoteInfoCache :> es,
+    FileSystem :> es,
     LSP :> es,
     IOE :> es
   ) =>
@@ -34,15 +39,40 @@ executeCommand request = do
   case cmd of
     "wiki.nextDay" -> navigateDay 1 args
     "wiki.prevDay" -> navigateDay (-1) args
+    "wiki.today" -> navigateToday
     _ -> do
       logWarn $ "Unknown command: " <> cmd
       pure $ InR LSP.Null
+
+-- | Navigate to today's date note.
+navigateToday ::
+  ( Logging :> es,
+    State NoteInfoCache :> es,
+    FileSystem :> es,
+    LSP :> es,
+    IOE :> es,
+    Error (TResponseError 'Method_WorkspaceExecuteCommand)
+      :> es
+  ) =>
+  Eff es (Aeson.Value |? LSP.Null)
+navigateToday = do
+  today <- liftIO $ localDay . zonedTimeToLocalTime <$> getZonedTime
+  cache <- get
+  target <- case Query.notesForDay today cache of
+    (note : _) -> pure note
+    [] -> do
+      note <- NoteInfo.IO.createDateNote today
+      modify $ IxSet.insert note
+      pure note
+  openDocument target
+  pure $ InR LSP.Null
 
 -- | Navigate to the note for a day offset from the current
 -- note's day.
 navigateDay ::
   ( Logging :> es,
     State NoteInfoCache :> es,
+    FileSystem :> es,
     LSP :> es,
     IOE :> es,
     Error (TResponseError 'Method_WorkspaceExecuteCommand)
@@ -110,10 +140,11 @@ nuriToSlug nuri = do
   Slug.fromMarkdownFilePath fp
 
 openDocument ::
-  (MonadLsp config m) =>
-  NoteInfo -> m ()
+  (LSP :> es, IOE :> es, FileSystem :> es) =>
+  NoteInfo -> Eff es ()
 openDocument note = do
-  let uri = Slug.intoUri "." note.slug
+  cwd <- getCurrentDirectory
+  let uri = Slug.intoUri cwd note.slug
   void $
     sendRequest
       SMethod_WindowShowDocument
