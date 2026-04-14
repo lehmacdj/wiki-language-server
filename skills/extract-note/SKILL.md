@@ -16,6 +16,14 @@ argument includes extra context beyond a clean note title, decide
 on an appropriate title (e.g. "Jane Doe (writer)" or just
 "Jane Doe" if unambiguous) and confirm with the user if unclear.
 
+The user may also provide full body content for the new note (e.g.
+a bio or description to paste verbatim). When they do, include that
+content verbatim in step 6, but still consider augmenting it with
+additional context drawn from existing references (e.g. a short
+lead-in summary, backlinks to related notes, or a subsection
+grouping related mentions). The verbatim content is a floor, not a
+ceiling. Steps 1-5 and 7 still apply.
+
 **Process**:
 
 ### 1. Search for references
