@@ -9,6 +9,7 @@ import Handlers.TextDocument.Changes
 import Handlers.TextDocument.Completion
 import Handlers.TextDocument.Definition
 import Handlers.TextDocument.Formatting
+import Handlers.TextDocument.SemanticTokens
 import Handlers.Workspace.ExecuteCommand
 import Language.LSP.Server
 import Models.Completion (extraCompletionCharacters)
@@ -61,6 +62,9 @@ handlers =
       requestHandler' SMethod_TextDocumentFormatting textDocumentFormatting,
       requestHandler' SMethod_TextDocumentCompletion textDocumentCompletion,
       requestHandler' SMethod_CompletionItemResolve completionItemResolve,
+      requestHandler'
+        SMethod_TextDocumentSemanticTokensFull
+        textDocumentSemanticTokensFull,
       requestHandler'
         SMethod_WorkspaceExecuteCommand
         executeCommand
