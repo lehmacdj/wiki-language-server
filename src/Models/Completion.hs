@@ -62,8 +62,8 @@ renderCompletionForLineNum completion@WikiLinkCompletion {..} =
           _labelDetails =
             Just
               CompletionItemLabelDetails
-                { _detail = Just slug.text,
-                  _description = Nothing
+                { _detail = Nothing,
+                  _description = Just slug.text
                 },
           _kind = Just CompletionItemKind_File,
           _tags = Nothing,
