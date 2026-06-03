@@ -11,20 +11,22 @@ Currently supports:
   - fuzzy matching based on title cache
   - resolve request for preview of file
 
-MVP features (this will be a moving target, and mostly is a smaller list to keep
-me focused on what I'm working on/thinking about right now):
-- Note creation / actions to create notes from visual selections (i.e. completely replace neuron.vim)
+Most actively interested in:
+- commands for creating notes:
+  - expose as LSP commands & bind in an optional vim plugin
+  - replace `\n` + `\d` macros that I currently use
+  - allow more flexible/context dependent note creation, i.e. transforming a single bullet point + sublist into note title + bullets at top level
+- create notes from completion menu
+  - `[[redistribution` should show a completion option that creates a new note and completes a link if one doesn't exist
+- title transclusion improvements: auto-capitalize lowercased titles when at beginning of sentence
+  - e.g. `In one dimension they're absolutely correct. [[fbHxiy10Ib2g|Redistribution]]<!--wls--> necessarily...` even if the note is titled `# redistribution`
+- completion for tags in the frontmatter
+- automatic renumbering for lists, e.g. `1. ...\n3. ...\n` turns into `1. ...\n2. ...\n`
 
-Aspires to eventually support at least:
+Aspires to eventually support:
 - Vim Plugin Features:
   - telescope extension for searching notes / backlinks of notes.
-    - mostly implemented via commands in the language server
-  - like conceal bits of syntax that are unnecessary to see most of the time
-    - I've implemented concealment using ordinary syntax rules in my vim config; using LSP to handle what I want to do is slightly overkill short term
-    - e.g. stuff to the left of the `|` in a `[[asdf|alt link text]]` link.
-    - This can use [Semantic Tokens](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens)
-      - use a custom `hidden` semantic token modifier that indicates that a symbol should be hidden
-    - Maybe also doable with [inlay hints](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint), though this would bend what that's supposed to do
+    - mostly implementable via commands in the language server, just a tiny amount of telescope glue probably
 - warnings for misleading/likely to be incorrect markup
   - integration with markdownlint or some other linting tool for markdown to catch syntax problems that would lead to weird rendering; potentially even an implementation from scratch of such a tool based on pandoc commonmark parsers
 - more autocomplete
@@ -47,4 +49,8 @@ Stretch goals (roughly ordered by priority, these are things that would be nice 
   - potentially possible to even do embedded code blocks using `skylighting` library or similar, which would be pretty cool
 
 Won't implement:
-- Nothing yet!
+- conceal unnecessary markdown syntax
+  - it's much easier to just implement this with treesitter queries in neovim directly
+  - We could use [Semantic Tokens](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens) to provide this functionality to other clients
+    - use a custom `hidden` semantic token modifier that indicates that a symbol should be hidden
+  - Alternatively [inlay hints](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint) are an LSP "conceal" feature, but I'm not sure they can be used to completely hide stuff, maybe only reduce to a single character
