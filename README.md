@@ -12,8 +12,6 @@ Currently supports:
   - resolve request for preview of file
 
 Most actively interested in:
-- bind `wiki.createNoteFromSelection` in `~/.dotfiles`, replacing the existing
-  `\n` and `\d` macros and exposing both open-after-creation behaviors
 - BUG: previews in completion are broken (all concatenated into a single line) for some reason
 - title transclusion improvements: auto-capitalize lowercased titles when at beginning of sentence
   - e.g. `In one dimension they're absolutely correct. [[fbHxiy10Ib2g|Redistribution]]<!--wls--> necessarily...` even if the note is titled `# redistribution`
