@@ -48,6 +48,7 @@ dependencies:
 - filepath
 - fuzzy # - fuzzyfind alternate fuzzy finding library, maybe worth trying
 - generic-lens
+- haskell-src-meta
 # - ki-effectful (ki, but for effectful if I want to do actually fancy concurrency things)
 - ixset-typed
 - lens

@@ -51,6 +51,7 @@ library
       Models.Completion
       Models.Diagnostics
       Models.LinkTarget
+      Models.NoteCreation
       Models.NoteInfo
       Models.NoteInfo.IO
       Models.NoteInfo.Query
@@ -60,6 +61,7 @@ library
       Models.Page.Parser
       Models.Page.SourcePos
       Models.Page.TH
+      Models.Page.THSpec
       Models.Page.Utils
       Models.Slug
       Models.WikiLanguageServerConfig
@@ -166,6 +168,7 @@ library
     , filepath
     , fuzzy
     , generic-lens
+    , haskell-src-meta
     , hspec
     , hspec-expectations
     , ixset-typed
@@ -283,6 +286,7 @@ executable wiki
     , filepath
     , fuzzy
     , generic-lens
+    , haskell-src-meta
     , hspec
     , hspec-expectations
     , ixset-typed
@@ -402,6 +406,7 @@ test-suite wiki-language-server-test
     , filepath
     , fuzzy
     , generic-lens
+    , haskell-src-meta
     , hspec
     , hspec-expectations
     , ixset-typed

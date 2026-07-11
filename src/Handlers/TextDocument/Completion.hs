@@ -16,7 +16,8 @@ textDocumentCompletion ::
     Logging :> es,
     FileSystem :> es,
     Diagnostics :> es,
-    State NoteInfoCache :> es
+    State NoteInfoCache :> es,
+    IOE :> es
   ) =>
   HandlerFor 'Method_TextDocumentCompletion es
 textDocumentCompletion request = do
@@ -26,7 +27,9 @@ textDocumentCompletion request = do
     getVirtualFileRange uri (rangeFromStartOfLine position)
       `onNothingM` throwNoContentsAvailable
   noteInfos <- get
-  let completions = makeWikiLinkCompletionsFromLine noteInfos position line
+  createSlug <- liftIO Slug.generateRandomSlug
+  let completions =
+        makeWikiLinkCompletionsFromLine noteInfos (Just createSlug) position line
   let result =
         CompletionList
           { _isIncomplete = True,
@@ -61,21 +64,24 @@ completionItemResolve TRequestMessage {_params = completionItem} = do
   completion <-
     extractOriginalCompletion completionItem
       `onLeft` throwUnableToExtractOriginalCompletion
-  currentDirectory <- getCurrentDirectory
-  let uri = Slug.intoUri currentDirectory completion.slug
-  (_, mcontents) <- tryGetUriContents uri
-  contents <- mcontents `onNothing` throwNoContentsAvailable
-  parsed <- parseDocumentThrow uri contents
-  firstH1Position@(Position l _) <-
-    Page.getFirstH1Position parsed `onNothing` throwNoContentsAvailable
-  let range = Range firstH1Position (Position (l + 1000) 0)
-  let notePreview =
-        MarkupContent
-          MarkupKind_Markdown
-          (contents `restrictToRange` range)
-  let resolved =
-        completionItem
-          & J.documentation
-            ?~ InR notePreview
-  logInfo $ "Resolved completion: " <> tshow resolved
-  pure resolved
+  case completion of
+    CreateNoteCompletion {} -> pure completionItem
+    WikiLinkCompletion {} -> do
+      currentDirectory <- getCurrentDirectory
+      let uri = Slug.intoUri currentDirectory completion.slug
+      (_, mcontents) <- tryGetUriContents uri
+      contents <- mcontents `onNothing` throwNoContentsAvailable
+      parsed <- parseDocumentThrow uri contents
+      firstH1Position@(Position l _) <-
+        Page.getFirstH1Position parsed `onNothing` throwNoContentsAvailable
+      let range = Range firstH1Position (Position (l + 1000) 0)
+      let notePreview =
+            MarkupContent
+              MarkupKind_Markdown
+              (contents `restrictToRange` range)
+      let resolved =
+            completionItem
+              & J.documentation
+                ?~ InR notePreview
+      logInfo $ "Resolved completion: " <> tshow resolved
+      pure resolved
