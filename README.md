@@ -14,23 +14,38 @@ Currently supports:
 Most actively interested in:
 - commands for creating notes:
   - expose as LSP commands & bind in an optional vim plugin
-  - replace `\n` + `\d` macros that I currently use
-  - allow more flexible/context dependent note creation, i.e. transforming a single bullet point + sublist into note title + bullets at top level
+  - I want to be able to select elements of a list and convert to an H1/list of sublist items
+  - I also want to be able to convert `[Some title](https://example.com): some some thing` into a note titled `Some title`
+  - Turn `[Some title](https://example.com)` into note with `public_alternate:` set in YAML front matter
+  - Maybe it can "infer" the correct thing to do based on the selection and even subsume `<LocalLeader>d` for small selections?
+    - selecting just a single word, without a bullet point / heading should just create a note with the selected content as the title
+  - replace `\n` + `\d` macros that I currently use (requires making changes in `~/.dotfiles` as well)
+- template `[md| ... |]` quasi quoter instead of the extremely ad-hoc logic that Claude wrote
+  - allow embedding Haskell expressions/variables and evaluate using template Haskell, there's an example of how to do this in `~/src/graph/cli` for the `[path| ... |]` quasi quoter
+  - use this to cleanup the API surface area of note creation + make note creation tests more readable
 - create notes from completion menu
   - `[[redistribution` should show a completion option that creates a new note and completes a link if one doesn't exist
+- BUG: previews in completion are broken (all concatenated into a single line) for some reason
 - title transclusion improvements: auto-capitalize lowercased titles when at beginning of sentence
   - e.g. `In one dimension they're absolutely correct. [[fbHxiy10Ib2g|Redistribution]]<!--wls--> necessarily...` even if the note is titled `# redistribution`
-- completion for tags in the frontmatter
 - automatic renumbering for lists, e.g. `1. ...\n3. ...\n` turns into `1. ...\n2. ...\n`
+  - this should be implemented using the existing autoformatter infrastructure
+- introspecting tags within wikilanguage server
+  - need to build an index, probably should be cached similarly to the title cache?
+  - autocomplete for tags (when editing in YAML frontmatter)
+- wikilinks inside of complex markdown structures don't always work right
+  - e.g. see `[[48FOjJ7COOaX|closed vs open types]]<!--wls-->` in `~/wiki`, where syntax highlighting is broken too
+  - go to definition breaks in footnotes too
+  - main thing is probably to fix the pandoc parser I'm using in the LSP, probably need to enable some extensions that I'm not currently enabling
 
 Aspires to eventually support:
 - Vim Plugin Features:
   - telescope extension for searching notes / backlinks of notes.
     - mostly implementable via commands in the language server, just a tiny amount of telescope glue probably
+    - in practice I mostly end up just using `rg` + `#.*<some text>` which does well enough for most queries
 - warnings for misleading/likely to be incorrect markup
   - integration with markdownlint or some other linting tool for markdown to catch syntax problems that would lead to weird rendering; potentially even an implementation from scratch of such a tool based on pandoc commonmark parsers
 - more autocomplete
-  - autocomplete for tags (when editing in YAML frontmatter)
   - autocomplete for GitHub style id link targets (e.g. a heading titled "Wiki Language Server" turns into `#wiki-language-server`)
 
 Technical concerns, that might eventually become relevant:
