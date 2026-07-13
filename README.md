@@ -10,6 +10,9 @@ Currently supports:
 - `textDocument/completion` requests with:
   - fuzzy matching based on title cache
   - resolve request for preview of file
+- Note creation: exposes a `wiki.createNoteFromSelection` command
+  - infers what kind of note to create from structure and extracts content
+  - supports opening the note for further editing, or staying in the current note
 
 Most actively interested in:
 - BUG: previews in completion are broken (all concatenated into a single line) for some reason
