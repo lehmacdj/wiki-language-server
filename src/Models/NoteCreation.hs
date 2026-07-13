@@ -217,10 +217,24 @@ spec_inferNoteDraft = do
       `shouldBe` Right (NoteDraft "Parent" "Parent" (Just "Body") Nothing "")
   it "extracts a leading link and separator" $
     inferNoteDraft "[Title](https://example.com) — description"
-      `shouldBe` Right (NoteDraft "Title" "Title" (Just "description") (Just "https://example.com") "")
+      `shouldBe` Right
+        ( NoteDraft
+            "Title"
+            "Title"
+            (Just "description")
+            (Just "https://example.com")
+            ""
+        )
   it "composes list and link inference" $
     inferNoteDraft "- [Title](https://example.com): description\n  - Child"
-      `shouldBe` Right (NoteDraft "Title" "Title" (Just "description\n- Child") (Just "https://example.com") "- ")
+      `shouldBe` Right
+        ( NoteDraft
+            "Title"
+            "Title"
+            (Just "description\n- Child")
+            (Just "https://example.com")
+            "- "
+        )
   it "rejects unmatched multiline text" $
     inferNoteDraft "one\ntwo" `shouldSatisfy` either (const True) (const False)
   it "rejects multiple root headings" $
@@ -230,7 +244,13 @@ spec_renderNote :: Spec
 spec_renderNote = do
   it "renders a compact note with alternate URL" do
     let now = ZonedTime (LocalTime (fromGregorian 2026 7 11) midnight) utc
-        draft = NoteDraft "Title" "Title" (Just "description") (Just "https://example.com") ""
+        draft =
+          NoteDraft
+            "Title"
+            "Title"
+            (Just "description")
+            (Just "https://example.com")
+            ""
     renderNote now draft
       `shouldBe` unlines
         [ "---",

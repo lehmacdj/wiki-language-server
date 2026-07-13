@@ -44,6 +44,7 @@ extra-deps:
   commit: f22e3cdd7b77977fe3e9ec75fccd9a0f79c47f97
 - lsp-types-2.3.0.1
 - lsp-2.7.0.1
+- lsp-test-0.17.1.1
 - effectful-2.5.1.0
 - effectful-core-2.5.1.0
 # - effectful-plugin-1.1.0.4

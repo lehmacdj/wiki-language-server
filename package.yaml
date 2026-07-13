@@ -53,6 +53,7 @@ dependencies:
 - ixset-typed
 - lens
 - lsp
+- lsp-test
 - lsp-types
 - megaparsec
 - monad-control
@@ -63,6 +64,7 @@ dependencies:
 - parser-combinators
 - prettyprinter
 - prettyprinter-ansi-terminal
+- process
 - random
 - safe-exceptions
 - sqlite-simple
@@ -161,6 +163,8 @@ tests:
   wiki-language-server-test:
     main:                Main.hs
     source-dirs:         test
+    build-tools:
+    - wiki-language-server:wiki
     ghc-options:
     - -threaded
     - -rtsopts

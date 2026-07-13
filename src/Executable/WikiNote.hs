@@ -48,7 +48,7 @@ wikiNoteMain lookupMode outputFormat createIfMissing wikiDir = do
           lookupWithRescan
             cache
             (Query.notesForDay day)
-            (runEffects $ createDateNote day)
+            (runEffects $ fst <$> createDateNote day)
 
     handleTitleLookup cache titleText =
       lookupWithRescan

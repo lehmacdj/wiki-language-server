@@ -2,6 +2,7 @@ module Executable.WikiLanguageServer.Interpreter where
 
 import Effectful.FileSystem (runFileSystem)
 import Effectful.State.Static.Shared
+import LSP.Mutation
 import LSP.Raw
 import LSP.VFS
 import Language.LSP.Server
@@ -25,6 +26,7 @@ type LSPEffects =
 type GlobalEffects :: [Effect]
 type GlobalEffects =
   [ FileSystem,
+    State MutationGate,
     State NoteInfoCache,
     Concurrent,
     IOE
@@ -53,6 +55,7 @@ runGlobalEffects_ ::
 runGlobalEffects_ =
   id -- this is here so >>> can precede all following lines
     >>> runFileSystem
+    >>> evalState initialMutationGate
     >>> evalState mempty
     >>> runConcurrent
     >>> runEff

@@ -46,6 +46,8 @@ library
       Handlers.TextDocument.Formatting
       Handlers.TextDocument.SemanticTokens
       Handlers.Workspace.ExecuteCommand
+      LSP.Mutation
+      LSP.Mutation.Integration
       LSP.Raw
       LSP.VFS
       Models.Completion
@@ -174,6 +176,7 @@ library
     , ixset-typed
     , lens
     , lsp
+    , lsp-test
     , lsp-types
     , megaparsec
     , monad-control
@@ -184,6 +187,7 @@ library
     , parser-combinators
     , prettyprinter
     , prettyprinter-ansi-terminal
+    , process
     , quickcheck-instances
     , random
     , safe-exceptions
@@ -292,6 +296,7 @@ executable wiki
     , ixset-typed
     , lens
     , lsp
+    , lsp-test
     , lsp-types
     , megaparsec
     , monad-control
@@ -302,6 +307,7 @@ executable wiki
     , parser-combinators
     , prettyprinter
     , prettyprinter-ansi-terminal
+    , process
     , quickcheck-instances
     , random
     , safe-exceptions
@@ -385,6 +391,8 @@ test-suite wiki-language-server-test
       TypeSynonymInstances
       ViewPatterns
   ghc-options: -Wall -Wno-name-shadowing -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
+  build-tools:
+      wiki
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -412,6 +420,7 @@ test-suite wiki-language-server-test
     , ixset-typed
     , lens
     , lsp
+    , lsp-test
     , lsp-types
     , megaparsec
     , monad-control
@@ -422,6 +431,7 @@ test-suite wiki-language-server-test
     , parser-combinators
     , prettyprinter
     , prettyprinter-ansi-terminal
+    , process
     , quickcheck-instances
     , random
     , safe-exceptions

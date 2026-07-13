@@ -73,21 +73,38 @@ saveCacheToFile ::
   NoteInfoCache ->
   Eff es ()
 saveCacheToFile fileName description cache = do
-  cachePath <- liftIO $ statePath fileName
-  let contents =
-        LBS.toStrict $
-          Builder.toLazyByteString $
-            serializeNoteInfoCache cache
-  atomicWriteFile cachePath contents
+  saveCacheToFileStrict fileName cache
     `catch` \(e :: SomeException) ->
       logWarn $
         "Failed to save " <> description <> ": " <> tshow e
+
+saveCacheToFileStrict ::
+  (IOE :> es) =>
+  FilePath ->
+  NoteInfoCache ->
+  Eff es ()
+saveCacheToFileStrict fileName cache = do
+  cachePath <- liftIO $ statePath fileName
+  atomicWriteFile cachePath $ encodedCache cache
+
+encodedCache :: NoteInfoCache -> ByteString
+encodedCache =
+  LBS.toStrict
+    . Builder.toLazyByteString
+    . serializeNoteInfoCache
 
 saveCache ::
   (IOE :> es, Logging :> es) =>
   NoteInfoCache ->
   Eff es ()
 saveCache = saveCacheToFile noteCacheFileName "note cache"
+
+-- | Persist the cache, propagating failures to a surrounding transaction.
+saveCacheStrict ::
+  (IOE :> es) =>
+  NoteInfoCache ->
+  Eff es ()
+saveCacheStrict = saveCacheToFileStrict noteCacheFileName
 
 saveDayNoteCache ::
   (IOE :> es, Logging :> es) =>
@@ -111,10 +128,10 @@ rescanCache = do
   saveCache cache
   pure cache
 
--- | Create a new note file for the given day and return its
--- NoteInfo. The file is written relative to the current
--- directory.
-createDateNote :: (FileSystem :> es, IOE :> es) => Day -> Eff es NoteInfo
+-- | Create a new note file for the given day and return its NoteInfo and exact
+-- staged contents. The file is written relative to the current directory.
+createDateNote ::
+  (FileSystem :> es, IOE :> es) => Day -> Eff es (NoteInfo, Text)
 createDateNote day = do
   slug <- liftIO Slug.generateRandomSlug
   now <- liftIO getZonedTime
@@ -137,4 +154,4 @@ createDateNote day = do
         Slug.intoFilePathRelativeToDir "." slug.text
   liftIO $
     BS.writeFile filePath (Text.encodeUtf8 content)
-  pure NoteInfo {day = Just day, ..}
+  pure (NoteInfo {day = Just day, ..}, content)

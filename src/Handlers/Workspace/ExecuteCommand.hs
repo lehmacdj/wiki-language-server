@@ -2,19 +2,23 @@ module Handlers.Workspace.ExecuteCommand
   ( executeCommand,
     commandNames,
     spec_createNoteArgs,
+    spec_rollbackMutation,
   )
 where
 
 import Data.Aeson qualified as Aeson
 import Data.IxSet.Typed qualified as IxSet
-import Data.Map.Strict qualified as Map
 import Data.Text qualified as Text
 import Effectful.FileSystem
 import Effectful.State.Static.Shared (State, get, modify)
 import Handlers.Prelude
+import LSP.Mutation
 import Language.LSP.Protocol.Lens as J hiding (executeCommand, length, to)
 import Language.LSP.Protocol.Types qualified as LSP
-import Language.LSP.Server (sendNotification, sendRequest)
+import Language.LSP.Server
+  ( sendNotification,
+    sendRequest,
+  )
 import Models.NoteInfo
 import Models.NoteInfo.IO qualified as NoteInfo.IO
 import Models.NoteInfo.Query qualified as Query
@@ -34,10 +38,12 @@ commandNames =
 executeCommand ::
   ( Logging :> es,
     State NoteInfoCache :> es,
+    State MutationGate :> es,
     FileSystem :> es,
     VFSAccess :> es,
     Diagnostics :> es,
     LSP :> es,
+    Concurrent :> es,
     IOE :> es
   ) =>
   HandlerFor 'Method_WorkspaceExecuteCommand es
@@ -79,15 +85,18 @@ spec_createNoteArgs = describe "create-note command arguments" do
 createNoteFromSelection ::
   ( Logging :> es,
     State NoteInfoCache :> es,
+    State MutationGate :> es,
     FileSystem :> es,
     VFSAccess :> es,
     Diagnostics :> es,
     LSP :> es,
-    IOE :> es,
-    Error (TResponseError 'Method_WorkspaceExecuteCommand) :> es
+    Concurrent :> es,
+    IOE :> es
   ) =>
   Maybe [Aeson.Value] ->
-  Eff es (Aeson.Value |? LSP.Null)
+  Eff
+    (Error (TResponseError 'Method_WorkspaceExecuteCommand) : es)
+    (Aeson.Value |? LSP.Null)
 createNoteFromSelection args = do
   parsedArgs <- parseCreateNoteArgs args
   case (parsedArgs.completionTitle, parsedArgs.slug) of
@@ -101,35 +110,47 @@ parseCreateNoteArgs ::
 parseCreateNoteArgs (Just (value : _)) =
   case Aeson.fromJSON value of
     Aeson.Success parsed -> pure parsed
-    Aeson.Error err -> throwCommandError $ "Invalid note creation arguments: " <> pack err
+    Aeson.Error err ->
+      throwCommandError $ "Invalid note creation arguments: " <> pack err
 parseCreateNoteArgs _ = throwCommandError "Missing note creation arguments"
 
 createFromCompletion ::
   ( Logging :> es,
     State NoteInfoCache :> es,
+    State MutationGate :> es,
+    Concurrent :> es,
+    LSP :> es,
     FileSystem :> es,
-    IOE :> es,
-    Error (TResponseError 'Method_WorkspaceExecuteCommand) :> es
+    VFSAccess :> es,
+    IOE :> es
   ) =>
-  Slug.Slug -> Text -> Eff es ()
+  Slug.Slug ->
+  Text ->
+  Eff (Error (TResponseError 'Method_WorkspaceExecuteCommand) : es) ()
 createFromCompletion slug titleMarkdown = do
   draft <- inferNoteDraft titleMarkdown `onLeft` throwCommandError
-  cache <- get
-  case exactMatchCaseFold draft.title cache of
-    Just _ -> pure ()
-    Nothing -> void $ writeNewNote slug draft
+  result <- withMutationLease (creationDescription draft) \_lease -> do
+    cache <- get
+    case exactMatchCaseFold draft.title cache of
+      Just existing -> void $ readCachedNote existing
+      Nothing -> do
+        void $ writeNewNote slug draft
+        persistCacheStrictPreservingNote
+  result `onLeft` throwMutationBlocked "create a note"
 
 createFromSelection ::
   ( Logging :> es,
     State NoteInfoCache :> es,
+    State MutationGate :> es,
+    Concurrent :> es,
     FileSystem :> es,
     VFSAccess :> es,
     Diagnostics :> es,
     LSP :> es,
-    IOE :> es,
-    Error (TResponseError 'Method_WorkspaceExecuteCommand) :> es
+    IOE :> es
   ) =>
-  CreateNoteArgs -> Eff es ()
+  CreateNoteArgs ->
+  Eff (Error (TResponseError 'Method_WorkspaceExecuteCommand) : es) ()
 createFromSelection args = do
   sourceUri <-
     ((args.textDocument <&> view J.uri) <|> args.uri)
@@ -140,33 +161,48 @@ createFromSelection args = do
     getVirtualFileRange normalizedUri sourceRange
       `onNothingM` throwCommandError "Could not read the selected source text"
   draft <- inferNoteDraft selected `onLeft` throwCommandError
-  cache <- get
-  mutation <- case exactMatchCaseFold draft.title cache of
-    Just existing -> prepareExistingNote existing draft
-    Nothing -> do
-      newSlug <- liftIO Slug.generateRandomSlug
-      void $ writeNewNote newSlug draft
-      pure $ CreatedNote newSlug
-  let targetSlug = mutationSlug mutation
-      replacement = replacementLink targetSlug draft
-  applied <- applyNoteEdits mutation sourceUri sourceRange replacement
-  unless applied do
-    rollbackMutation mutation
-    throwCommandError "The editor rejected the source note edit; note creation was rolled back"
-  when (fromMaybe True args.openAfterCreation) do
-    cache' <- get
-    withJust (Query.noteForSlug targetSlug cache') openDocument
+  sourceDocument <-
+    getVersionedTextDoc $ TextDocumentIdentifier sourceUri
+  result <- withMutationLease (creationDescription draft) \lease -> do
+    cache <- get
+    mutation <- case exactMatchCaseFold draft.title cache of
+      Just existing -> prepareExistingNote existing draft
+      Nothing -> do
+        newSlug <- liftIO Slug.generateRandomSlug
+        mutation <- writeNewNote newSlug draft
+        persistCacheStrictOrRollback mutation
+        pure mutation
+    let replacement = replacementLink (mutationSlug mutation) draft
+    edit <-
+      noteWorkspaceEdit
+        mutation
+        sourceDocument
+        sourceRange
+        replacement
+    void $
+      sendMutatingRequest
+        lease
+        SMethod_WorkspaceApplyEdit
+        (ApplyWorkspaceEditParams (Just "Create wiki note") edit)
+        (handleApplyEditResponse mutation $ fromMaybe True args.openAfterCreation)
+  result `onLeft` throwMutationBlocked "create a note"
 
 data NoteMutation
-  = CreatedNote Slug.Slug
-  | UpdatedNote NoteInfo Text Text
+  = CreatedNote NoteInfo Text
+  | UpdatedNote NoteInfo Text Text (Maybe Int32)
   | ReusedNote NoteInfo
 
 mutationSlug :: NoteMutation -> Slug.Slug
 mutationSlug = \case
-  CreatedNote slug -> slug
-  UpdatedNote note _ _ -> note.slug
+  CreatedNote note _ -> note.slug
+  UpdatedNote note _ _ _ -> note.slug
   ReusedNote note -> note.slug
+
+mutationNote :: NoteMutation -> NoteInfo
+mutationNote = \case
+  CreatedNote note _ -> note
+  UpdatedNote note _ _ _ -> note
+  ReusedNote note -> note
 
 exactMatchCaseFold :: Text -> NoteInfoCache -> Maybe NoteInfo
 exactMatchCaseFold title =
@@ -175,7 +211,7 @@ exactMatchCaseFold title =
 
 writeNewNote ::
   (FileSystem :> es, IOE :> es, State NoteInfoCache :> es, Logging :> es) =>
-  Slug.Slug -> NoteDraft -> Eff es Text
+  Slug.Slug -> NoteDraft -> Eff es NoteMutation
 writeNewNote slug draft = do
   now <- liftIO getZonedTime
   let contents = renderNote now draft
@@ -183,7 +219,9 @@ writeNewNote slug draft = do
   writeFileUtf8 path contents
   let note = NoteInfo slug draft.title Nothing
   modify $ IxSet.insert note
-  pure contents
+  -- Keeping the complete staged contents makes rollback data-safe. If pending
+  -- notes ever become large enough for this to matter, a digest is sufficient.
+  pure $ CreatedNote note contents
 
 prepareExistingNote ::
   ( FileSystem :> es,
@@ -193,34 +231,53 @@ prepareExistingNote ::
     Error (TResponseError 'Method_WorkspaceExecuteCommand) :> es
   ) =>
   NoteInfo -> NoteDraft -> Eff es NoteMutation
-prepareExistingNote note draft
-  | isNothing draft.body && isNothing draft.publicAlternate = pure $ ReusedNote note
-  | isNothing draft.publicAlternate = collision
-  | Just alternate <- draft.publicAlternate = do
-      cwd <- getCurrentDirectory
-      let uri = Slug.intoUri cwd note.slug
-      (_, mContents) <- tryGetUriContents uri
-      original <- mContents `onNothing` throwCommandError "Could not read the existing note"
-      parsed <- parseDocumentThrow uri original
-      let existingAlternate = publicAlternateFromPage parsed
-      when (maybe False (/= alternate) existingAlternate) $
-        throwCommandError "Existing note has a different public_alternate"
-      when (isJust draft.body && not (isStub parsed)) $
-        throwCommandError collisionMessage
-      let withAlternate =
-            if isNothing existingAlternate
-              then addPublicAlternate alternate original
-              else original
-          updated = maybe withAlternate (appendBody withAlternate) draft.body
-      if updated == original
-        then pure $ ReusedNote note
-        else pure $ UpdatedNote note original updated
-  | otherwise = collision
+prepareExistingNote note draft = do
+  (uri, version, original) <- readCachedNote note
+  if isNothing draft.body && isNothing draft.publicAlternate
+    then pure $ ReusedNote note
+    else prepareContents uri version original
   where
+    prepareContents uri version original
+      | isNothing draft.publicAlternate = collision
+      | Just alternate <- draft.publicAlternate = do
+          parsed <- parseDocumentThrow uri original
+          let existingAlternate = publicAlternateFromPage parsed
+          when (maybe False (/= alternate) existingAlternate) $
+            throwCommandError "Existing note has a different public_alternate"
+          when (isJust draft.body && not (isStub parsed)) $
+            throwCommandError collisionMessage
+          let withAlternate =
+                if isNothing existingAlternate
+                  then addPublicAlternate alternate original
+                  else original
+              updated =
+                maybe withAlternate (appendBody withAlternate) draft.body
+          if updated == original
+            then pure $ ReusedNote note
+            else pure $ UpdatedNote note original updated version
+      | otherwise = collision
+
     collision =
       throwCommandError collisionMessage
     collisionMessage =
       "A note titled \x201c" <> draft.title <> "\x201d already exists and has content"
+
+readCachedNote ::
+  ( FileSystem :> es,
+    VFSAccess :> es,
+    Logging :> es,
+    Error (TResponseError 'Method_WorkspaceExecuteCommand) :> es
+  ) =>
+  NoteInfo -> Eff es (NormalizedUri, Maybe Int32, Text)
+readCachedNote note = do
+  cwd <- getCurrentDirectory
+  let uri = Slug.intoUri cwd note.slug
+  (version, contents) <- tryGetUriContents uri
+  contents' <-
+    contents
+      `onNothing` throwCommandError
+        "The note cache refers to a note that no longer exists"
+  pure (uri, version, contents')
 
 publicAlternateFromPage :: Pandoc -> Maybe Text
 publicAlternateFromPage (Pandoc (Meta metadata) _) =
@@ -232,7 +289,11 @@ addPublicAlternate alternate contents =
     "---" : rest ->
       case break (== "---") rest of
         (frontmatter, closing : body) ->
-          unlines $ "---" : frontmatter <> ["public_alternate: " <> alternate, closing] <> body
+          unlines $
+            "---"
+              : frontmatter
+                <> ["public_alternate: " <> alternate, closing]
+                <> body
         _ -> prepend
     _ -> prepend
   where
@@ -241,71 +302,217 @@ addPublicAlternate alternate contents =
 appendBody :: Text -> Text -> Text
 appendBody contents body = Text.stripEnd contents <> "\n" <> body
 
-applyNoteEdits ::
-  ( LSP :> es,
-    IOE :> es,
-    FileSystem :> es,
+creationDescription :: NoteDraft -> Text
+creationDescription draft = "creating note “" <> draft.title <> "”"
+
+throwMutationBlocked ::
+  (Error (TResponseError 'Method_WorkspaceExecuteCommand) :> es) =>
+  Text -> PendingMutation -> Eff es a
+throwMutationBlocked requested =
+  throwCommandError . mutationBlockedMessage requested
+
+noteWorkspaceEdit ::
+  ( FileSystem :> es,
     Error (TResponseError 'Method_WorkspaceExecuteCommand) :> es
   ) =>
-  NoteMutation -> Uri -> Range -> Text -> Eff es Bool
-applyNoteEdits mutation sourceUri sourceRange replacement = do
-  result <- liftIO newEmptyMVar
+  NoteMutation ->
+  VersionedTextDocumentIdentifier ->
+  Range ->
+  Text ->
+  Eff es WorkspaceEdit
+noteWorkspaceEdit mutation sourceDocument sourceRange replacement = do
   targetChanges <- case mutation of
-    UpdatedNote note original updated -> do
+    UpdatedNote note original updated version -> do
       cwd <- getCurrentDirectory
       let targetUri = fromNormalizedUri $ Slug.intoUri cwd note.slug
           targetLine = fromIntegral (length (lines original) + 1)
           targetRange = Range (Position 0 0) (Position targetLine 0)
-      when (targetUri == sourceUri) $
-        throwCommandError "Cannot update public_alternate while extracting from the same note"
-      pure [(targetUri, [TextEdit targetRange updated])]
+      when (targetUri == sourceDocument._uri) $
+        throwCommandError $
+          "Cannot update public_alternate while extracting from the same note"
+      pure
+        [ documentChange
+            targetUri
+            (maybe (InR LSP.Null) InL version)
+            [TextEdit targetRange updated]
+        ]
     _ -> pure []
-  let changes =
-        Map.fromListWith (<>) $
-          (sourceUri, [TextEdit sourceRange replacement]) : targetChanges
-  let edit =
-        WorkspaceEdit
-          { _changes = Just changes,
-            _documentChanges = Nothing,
-            _changeAnnotations = Nothing
-          }
-  void $
-    sendRequest
-      SMethod_WorkspaceApplyEdit
-      (ApplyWorkspaceEditParams (Just "Create wiki note") edit)
-      (liftIO . putMVar result)
-  response <- liftIO $ takeMVar result
-  pure $ either (const False) (._applied) response
+  let sourceChange =
+        documentChange
+          sourceDocument._uri
+          (InL sourceDocument._version)
+          [TextEdit sourceRange replacement]
+  pure $
+    WorkspaceEdit
+      { _changes = Nothing,
+        -- Target-first ordering preserves copied content if a client cannot
+        -- apply a multi-document edit transactionally.
+        _documentChanges = Just $ targetChanges <> [sourceChange],
+        _changeAnnotations = Nothing
+      }
+  where
+    documentChange uri version edits =
+      InL $
+        TextDocumentEdit
+          (OptionalVersionedTextDocumentIdentifier uri version)
+          (map InL edits)
 
-rollbackMutation ::
-  (FileSystem :> es, State NoteInfoCache :> es) => NoteMutation -> Eff es ()
-rollbackMutation = \case
-  CreatedNote slug -> do
-    removeFile $ Slug.intoFilePathRelativeToDir "." slug.text
-    modify $ IxSet.deleteIx slug
-  UpdatedNote {} -> pure ()
-  ReusedNote _ -> pure ()
+handleApplyEditResponse ::
+  ( Logging :> es,
+    State NoteInfoCache :> es,
+    FileSystem :> es,
+    LSP :> es,
+    IOE :> es
+  ) =>
+  NoteMutation ->
+  Bool ->
+  Either
+    (TResponseError 'Method_WorkspaceApplyEdit)
+    ApplyWorkspaceEditResult ->
+  Eff es ()
+handleApplyEditResponse mutation openAfterCreation = \case
+  Left err -> applyFailed $ "The editor failed to apply the wiki edit: " <> err._message
+  Right result
+    | result._applied ->
+        when openAfterCreation $ openDocument (mutationNote mutation)
+    | otherwise ->
+        applyFailed $
+          fromMaybe "The editor rejected the wiki edit" result._failureReason
+  where
+    applyFailed message = do
+      rollbackMutation mutation
+      logError message
+      showErrorMessage message
 
--- | Navigate to today's date note.
-navigateToday ::
+persistCacheStrictOrRollback ::
   ( Logging :> es,
     State NoteInfoCache :> es,
     FileSystem :> es,
     LSP :> es,
     IOE :> es,
-    Error (TResponseError 'Method_WorkspaceExecuteCommand)
-      :> es
+    Error (TResponseError 'Method_WorkspaceExecuteCommand) :> es
   ) =>
-  Eff es (Aeson.Value |? LSP.Null)
+  NoteMutation -> Eff es ()
+persistCacheStrictOrRollback mutation = do
+  cache <- get
+  NoteInfo.IO.saveCacheStrict cache `catchAny` \exception -> do
+    rollbackMutation mutation
+    throwCommandError $
+      "Could not persist the note cache: " <> tshow exception
+
+-- Completion commands run after their text edit has already been inserted.
+-- Preserve the created target if persistence fails rather than leave that link
+-- broken; the in-memory cache remains usable and a later scan can persist it.
+persistCacheStrictPreservingNote ::
+  ( State NoteInfoCache :> es,
+    IOE :> es,
+    Error (TResponseError 'Method_WorkspaceExecuteCommand) :> es
+  ) =>
+  Eff es ()
+persistCacheStrictPreservingNote = do
+  cache <- get
+  NoteInfo.IO.saveCacheStrict cache `catchAny` \exception ->
+    throwCommandError $
+      "Created the note but could not persist the note cache: "
+        <> tshow exception
+
+rollbackMutation ::
+  ( Logging :> es,
+    FileSystem :> es,
+    State NoteInfoCache :> es,
+    LSP :> es,
+    IOE :> es
+  ) =>
+  NoteMutation -> Eff es ()
+rollbackMutation = \case
+  CreatedNote note stagedContents -> do
+    let path = Slug.intoFilePathRelativeToDir "." note.slug.text
+    exists <- doesFileExist path
+    contents <-
+      if exists
+        then Just <$> try @_ @SomeException (readFileUtf8 path)
+        else pure Nothing
+    case rollbackDisposition stagedContents contents of
+      FileMissing -> removeCacheEntry note.slug
+      FileUnchanged -> do
+        removeFile path
+        removeCacheEntry note.slug
+      FileChanged -> preserveModifiedNote note
+      FileUnverifiable exception -> do
+        logWarn $
+          "Could not verify staged note before rollback: "
+            <> tshow exception
+        preserveModifiedNote note
+  UpdatedNote {} -> pure ()
+  ReusedNote _ -> pure ()
+  where
+    removeCacheEntry slug = do
+      modify $ IxSet.deleteIx slug
+      get >>= NoteInfo.IO.saveCache
+
+    preserveModifiedNote note = do
+      let message =
+            "The editor edit failed, but modified note “"
+              <> note.title
+              <> "” was preserved"
+      logWarn message
+      showWarning message
+
+data RollbackDisposition
+  = FileMissing
+  | FileUnchanged
+  | FileChanged
+  | FileUnverifiable SomeException
+  deriving stock (Show)
+
+rollbackDisposition ::
+  Text -> Maybe (Either SomeException Text) -> RollbackDisposition
+rollbackDisposition _ Nothing = FileMissing
+rollbackDisposition staged (Just (Right current))
+  | staged == current = FileUnchanged
+  | otherwise = FileChanged
+rollbackDisposition _ (Just (Left exception)) = FileUnverifiable exception
+
+spec_rollbackMutation :: Spec
+spec_rollbackMutation = describe "mutation rollback" do
+  it "deletes only the exact staged contents" do
+    rollbackDisposition "staged" (Just $ Right "staged")
+      `shouldSatisfy` \case
+        FileUnchanged -> True
+        _ -> False
+    rollbackDisposition "staged" (Just $ Right "user edit")
+      `shouldSatisfy` \case
+        FileChanged -> True
+        _ -> False
+
+-- | Navigate to today's date note.
+navigateToday ::
+  ( Logging :> es,
+    State NoteInfoCache :> es,
+    State MutationGate :> es,
+    FileSystem :> es,
+    LSP :> es,
+    IOE :> es
+  ) =>
+  Eff
+    (Error (TResponseError 'Method_WorkspaceExecuteCommand) : es)
+    (Aeson.Value |? LSP.Null)
 navigateToday = do
   today <- liftIO $ localDay . zonedTimeToLocalTime <$> getZonedTime
   cache <- get
   target <- case Query.notesForDay today cache of
     (note : _) -> pure note
     [] -> do
-      note <- NoteInfo.IO.createDateNote today
-      modify $ IxSet.insert note
-      pure note
+      result <- withMutationLease "creating today's note" \_lease -> do
+        cache' <- get
+        case Query.notesForDay today cache' of
+          (note : _) -> pure note
+          [] -> do
+            (note, contents) <- NoteInfo.IO.createDateNote today
+            modify $ IxSet.insert note
+            persistCacheStrictOrRollback $ CreatedNote note contents
+            pure note
+      result `onLeft` throwMutationBlocked "create today's note"
   openDocument target
   pure $ InR LSP.Null
 
@@ -382,21 +589,33 @@ nuriToSlug nuri = do
   Slug.fromMarkdownFilePath fp
 
 openDocument ::
-  (LSP :> es, IOE :> es, FileSystem :> es) =>
+  (LSP :> es, IOE :> es, FileSystem :> es, Logging :> es) =>
   NoteInfo -> Eff es ()
 openDocument note = do
   cwd <- getCurrentDirectory
   let uri = Slug.intoUri cwd note.slug
   void $
-    sendRequest
-      SMethod_WindowShowDocument
-      ShowDocumentParams
-        { _uri = fromNormalizedUri uri,
-          _external = Nothing,
-          _takeFocus = Just True,
-          _selection = Nothing
-        }
-      (const $ pure ())
+    -- The response can arrive after this command handler returns, so retain a
+    -- fork-safe effect environment for the callback.
+    withUnliftStrategy SeqForkUnlift $
+      sendRequest
+        SMethod_WindowShowDocument
+        ShowDocumentParams
+          { _uri = fromNormalizedUri uri,
+            _external = Nothing,
+            _takeFocus = Just True,
+            _selection = Nothing
+          }
+        (\case
+          Left err -> navigationFailed err._message
+          Right result ->
+            unless result._success $
+              navigationFailed "The editor could not open the wiki note"
+        )
+  where
+    navigationFailed message = do
+      logError message
+      showErrorMessage message
 
 showWarning :: (MonadLsp config m) => Text -> m ()
 showWarning msg =
@@ -404,6 +623,15 @@ showWarning msg =
     SMethod_WindowShowMessage
     ShowMessageParams
       { _type_ = MessageType_Warning,
+        _message = msg
+      }
+
+showErrorMessage :: (MonadLsp config m) => Text -> m ()
+showErrorMessage msg =
+  sendNotification
+    SMethod_WindowShowMessage
+    ShowMessageParams
+      { _type_ = MessageType_Error,
         _message = msg
       }
 

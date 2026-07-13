@@ -19,22 +19,6 @@ import MyPrelude
 import Paths_wiki_language_server (version)
 import Utils.Text (sanitizeResponse)
 
--- | Convert any synchronous exception into a TResponseError
-rootExceptionHandler ::
-  (Logging :> es, Error (TResponseError method) :> es) =>
-  Eff es a ->
-  Eff es a
-rootExceptionHandler action =
-  action `catchAny` \e -> do
-    let msg = "Encountered unrecoverable error during request: " <> tshow e
-    logError msg
-    throwError_ $
-      TResponseError
-        { _code = InR ErrorCodes_InternalError,
-          _message = msg,
-          _xdata = Nothing
-        }
-
 -- | Shim for making requestHandler easier to use in the simple way that one
 -- generally wants to use it
 requestHandler' ::
@@ -48,8 +32,21 @@ requestHandler' ::
     Handlers (Eff es)
   )
 requestHandler' s handler = requestHandler s \request responder -> do
-  runErrorNoCallStack (rootExceptionHandler (handler request))
-    >>= responder . fmap sanitizeResponse
+  response <-
+    tryAny (runErrorNoCallStack $ handler request) >>= \case
+      Right result -> pure result
+      Left exception -> do
+        let message =
+              "Encountered unrecoverable error during request: "
+                <> tshow exception
+        logError message
+        pure . Left $
+          TResponseError
+            { _code = InR ErrorCodes_InternalError,
+              _message = message,
+              _xdata = Nothing
+            }
+  responder $ fmap sanitizeResponse response
 
 handlers :: Handlers (Eff Effects)
 handlers =
