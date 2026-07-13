@@ -1,6 +1,7 @@
 module Handlers.Workspace.ExecuteCommand
   ( executeCommand,
     commandNames,
+    spec_createNoteArgs,
   )
 where
 
@@ -53,7 +54,8 @@ executeCommand request = do
       pure $ InR LSP.Null
 
 data CreateNoteArgs = CreateNoteArgs
-  { uri :: Maybe Uri,
+  { textDocument :: Maybe TextDocumentIdentifier,
+    uri :: Maybe Uri,
     range :: Maybe Range,
     openAfterCreation :: Maybe Bool,
     completionTitle :: Maybe Text,
@@ -61,6 +63,18 @@ data CreateNoteArgs = CreateNoteArgs
   }
   deriving (Generic)
   deriving (FromJSON) via FastGenericEncoding CreateNoteArgs
+
+spec_createNoteArgs :: Spec
+spec_createNoteArgs = describe "create-note command arguments" do
+  it "accepts the standard text-document and range parameter shape" do
+    let decoded =
+          Aeson.eitherDecode
+            "{\"textDocument\":{\"uri\":\"file:///wiki/source.md\"},\
+            \\"range\":{\"start\":{\"line\":0,\"character\":1},\
+            \\"end\":{\"line\":0,\"character\":4}}}" ::
+            Either String CreateNoteArgs
+    fmap (fmap (view J.uri) . (.textDocument)) decoded
+      `shouldBe` Right (Just (LSP.Uri "file:///wiki/source.md"))
 
 createNoteFromSelection ::
   ( Logging :> es,
@@ -117,7 +131,9 @@ createFromSelection ::
   ) =>
   CreateNoteArgs -> Eff es ()
 createFromSelection args = do
-  sourceUri <- args.uri `onNothing` throwCommandError "Missing source URI"
+  sourceUri <-
+    ((args.textDocument <&> view J.uri) <|> args.uri)
+      `onNothing` throwCommandError "Missing source textDocument"
   sourceRange <- args.range `onNothing` throwCommandError "Missing selection range"
   let normalizedUri = toNormalizedUri sourceUri
   selected <-
