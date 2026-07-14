@@ -15,7 +15,6 @@ Currently supports:
   - supports opening the note for further editing, or staying in the current note
 
 Most actively interested in:
-- BUG: previews in completion are broken (all concatenated into a single line) for some reason
 - title transclusion improvements: auto-capitalize lowercased titles when at beginning of sentence
   - e.g. `In one dimension they're absolutely correct. [[fbHxiy10Ib2g|Redistribution]]<!--wls--> necessarily...` even if the note is titled `# redistribution`
 - automatic renumbering for lists, e.g. `1. ...\n3. ...\n` turns into `1. ...\n2. ...\n`
