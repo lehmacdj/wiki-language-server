@@ -86,7 +86,12 @@ makeWikiLinkCompletionsFromLine noteInfos createSlug position line = withEarlyRe
               title = draft.title,
               titleMarkdown = draft.titleMarkdown
             }
-  pure $ strong <> create <> weak
+      createIsPremature =
+        queryEndsWithIncompleteWord searchPrefix $ map (.title) fuzzyNotes
+  pure $
+    if createIsPremature
+      then strong <> weak <> create
+      else strong <> create <> weak
 
 titlesEqual :: Text -> Text -> Bool
 titlesEqual a b = Text.toCaseFold a == Text.toCaseFold b
@@ -106,6 +111,24 @@ isStrongMatch query candidate =
       | otherwise = ' '
     small `isSubmultisetOf` large =
       all (\(word, count) -> Map.findWithDefault 0 word large >= count) $ Map.toList small
+
+queryEndsWithIncompleteWord :: Text -> [Text] -> Bool
+queryEndsWithIncompleteWord query candidates =
+  case (Text.unsnoc query, reverse $ normalizedWords query) of
+    (Just (_, finalChar), queryWord : _)
+      | isAlphaNum finalChar ->
+          not (queryWord `elem` candidateWords)
+            && any (isProperPrefix queryWord) candidateWords
+    _ -> False
+  where
+    candidateWords = normalizedWords =<< candidates
+    isProperPrefix prefix word =
+      prefix /= word && prefix `Text.isPrefixOf` word
+    normalizedWords =
+      Text.words . Text.map wordChar . Text.toCaseFold
+    wordChar c
+      | isAlphaNum c = c
+      | otherwise = ' '
 
 renderCompletionForLineNum :: Completion -> [CompletionItem]
 renderCompletionForLineNum completion@WikiLinkCompletion {..} =
@@ -213,6 +236,20 @@ spec_makeWikiLinkCompletionsFromLine = do
         "Hello world",
         "Create world",
         "A wild unordinary herald"
+      ]
+  it "places create below fuzzy matches for an incomplete word" do
+    let result =
+          makeWikiLinkCompletionsFromLine
+            fakeNoteInfoCache
+            (Just $ Slug "new-note")
+            (P 0 6)
+            "[[worl"
+    map completionName result
+      `shouldBe` [
+        "Test world",
+        "Hello world",
+        "A wild unordinary herald",
+        "Create worl"
       ]
   it "treats whole query words in any order as strong" do
     let result =
