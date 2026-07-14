@@ -10,3 +10,6 @@ This is a Language Server Protocol server that implements utilities for markdown
 - Prefer writing tests in the file with with the function being tested
 - Use Hspec, it's imported by default via MyPrelude
 - Use the `[md| ... |]` quasi-quoter to write tests that use the pandoc AST
+
+## Installation
+After making changes, they are only available to me in my editor after doing `stack install`. Please run `stack install` after you've completed working on changes.
